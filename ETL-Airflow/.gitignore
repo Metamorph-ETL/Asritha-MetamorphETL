@@ -10,3 +10,21 @@ webserver_config.py
 airflow.cfg
 airflow.db
 meta-morph-d-eng-pro-admin.json
+
+# Ignore everything by default
+*
+# Exclude the .gitignore file from being ignored
+!.gitignore
+
+# Include the 'jars' directory and its contents
+!/jars/
+!/jars/**
+
+# Include the 'dags' directory and its contents
+!/dags/
+!/dags/**
+
+# Include specific files
+!/requirements.txt
+!/Dockerfile
+!/docker-compose.override.yml
