@@ -39,8 +39,6 @@ def get_latest_file(file_type):
 
     return latest_file
 
-print(f"Looking for files in: {base_dir}")
-print(f"Found customer files: {glob.glob(os.path.join(base_dir, 'customers_*.csv'))}")
 @apps.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(fake_users_db, form_data.username, form_data.password)
