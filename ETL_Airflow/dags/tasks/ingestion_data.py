@@ -27,9 +27,6 @@ def m_ingest_data_into_suppliers():
             .withColumnRenamed("region", "REGION")
         ) .select("SUPPLIER_ID", "SUPPLIER_NAME", "CONTACT_DETAILS", "REGION")
         
-
-        SQ_Shortcut_To_Supplier.printSchema()
-        
         # Check for duplicate SUPPLIER_IDs
         Duplicate_check.has_duplicates(SQ_Shortcut_To_Supplier, ["SUPPLIER_ID"])
         
@@ -70,8 +67,6 @@ def m_ingest_data_into_products():
             .withColumnRenamed("reorder_level", "REORDER_LEVEL")
             .withColumnRenamed("supplier_id", "SUPPLIER_ID")
             ).select("PRODUCT_ID", "PRODUCT_NAME", "CATEGORY", "PRICE", "STOCK_QUANTITY", "REORDER_LEVEL", "SUPPLIER_ID")
-
-        SQ_Shortcut_To_Product.printSchema()
         
         # Check for duplicate PRODUCT_IDs
         Duplicate_check.has_duplicates(SQ_Shortcut_To_Product, ["PRODUCT_ID"])
@@ -113,7 +108,6 @@ def m_ingest_data_into_customers():
              .select("CUSTOMER_ID", "NAME", "CITY", "EMAIL", "PHONE_NUMBER")
 )
 
-        SQ_Shortcut_To_Customer.printSchema()
          
         # Check for duplicate CUSTOMER_IDs
         Duplicate_check.has_duplicates(SQ_Shortcut_To_Customer, ["CUSTOMER_ID"])

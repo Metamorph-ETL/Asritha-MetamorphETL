@@ -4,7 +4,7 @@ from secret_key import POSTGRES_PASSWORD
 from pyspark.sql.functions import count
 import logging
 from airflow.exceptions import AirflowException
-from secret_key import TOKEN_URL
+from secret_key import TOKEN_URL,USERNAME,PASSWORD
 
 # Initialize logger
 log = logging.getLogger("etl_logger")
@@ -35,8 +35,8 @@ class Extractor:
     def _get_token(self):
         try:
             response = requests.post(TOKEN_URL, data={
-                "username": "admin", 
-                "password": "adminpassword",  
+                "username": USERNAME,
+                "password": PASSWORD,  
             })
 
             if response.status_code == 200:
@@ -47,13 +47,11 @@ class Extractor:
         except Exception as e:
             log.error(f"Token fetch failed: {str(e)}", exc_info=True)
       
-
-# Method to extract data from API using the token if required
     def extract_data(self):
         headers = {}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
-
+  
         response = requests.get(self.url, headers=headers)
         if response.status_code == 200:
             data = response.json().get("data", [])
@@ -64,29 +62,14 @@ class Extractor:
             log.error(error_msg)
             raise AirflowException(error_msg)
 
-
-    def extract_data(self):
-        headers = {
-            "Authorization": f"Bearer {self.token}"
-        }
-
-        response = requests.get(self.url, headers=headers)
-        if response.status_code == 200:
-            data = response.json().get("data", [])
-            log.info(f"Extracted {len(data)} records from {self.url}")
-            return data
-        else:
-            error_msg = f"Failed to fetch from {self.url}. Status: {response.status_code}"
-            log.error(error_msg)
-            raise AirflowException(error_msg)
 
 
 # Custom exception for duplicate detection
 
 class DuplicateException(Exception):
-    pass
+    def __init__(self, message):
+        super().__init__(message)
 
-# Duplicate check utility class
 class Duplicate_check:
     @classmethod
     def has_duplicates(cls, df, primary_key_list):
@@ -95,8 +78,9 @@ class Duplicate_check:
                       .agg(count('*').alias('cnt'))\
                       .filter('cnt > 1')
         if grouped_df.count() > 0:
-            raise DuplicateException(f"Found duplicates in columns {primary_key_list}")
+            raise DuplicateException(f"Found duplicates in columns: {primary_key_list}")
         logging.info("No duplicates found")
+
 
     
 # Function to load Spark DataFrame to PostgreSQL table
