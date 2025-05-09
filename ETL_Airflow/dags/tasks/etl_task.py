@@ -14,7 +14,6 @@ def m_load_usa():
         spark = SparkSession.builder \
             .appName("USA_Population_ETL") \
             .config("spark.jars", "/usr/local/airflow/jars/postgresql-42.7.1.jar") \
-            .config("spark.master", "local[4]") \
             .getOrCreate()
         spark.sparkContext.setLogLevel("INFO")
         
@@ -47,6 +46,7 @@ def m_load_usa():
             "driver": "org.postgresql.Driver"
         }
 
+#It stores data in public schema
         SQ_Shortcut_To_population_data.write.jdbc(
                 url=jdbc_url,
                 table="population_data",
@@ -59,7 +59,6 @@ def m_load_usa():
     except Exception as e:
         raise AirflowException(f"ETL failed: {str(e)}")
     finally:
-        if spark:
             spark.stop()
             log.info("Spark session stopped")
 

@@ -14,9 +14,9 @@ from tasks.ingestion_data import (
     tags=["ETL"]
 )
 def etl_process():
-   m_ingest_data_into_suppliers()
-   m_ingest_data_into_products()
-   m_ingest_data_into_customers()
+   supplier_task = m_ingest_data_into_suppliers()
+   product_task = m_ingest_data_into_products()
+   customer_task = m_ingest_data_into_customers()
 
 
 dag_instance = etl_process()
