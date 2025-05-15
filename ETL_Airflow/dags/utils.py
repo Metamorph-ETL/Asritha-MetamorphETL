@@ -5,6 +5,7 @@ from pyspark.sql.functions import count
 import logging
 from airflow.exceptions import AirflowException
 from secret_key import TOKEN_URL,USERNAME,PASSWORD
+from pyspark.sql.functions import col
 
 # Initialize logger
 log = logging.getLogger("etl_logger")
@@ -13,12 +14,15 @@ log.setLevel(logging.INFO)
 #create and configure Spark session
 def create_session():
     log.info("Starting ETL process")
-    spark = SparkSession.builder\
-        .appName("ETL")\
-        .config("spark.jars", "/usr/local/airflow/jars/postgresql-42.7.1.jar")\
+    spark = SparkSession.builder.appName("GCS_to_Postgres") \
+        .config("spark.jars", "/usr/local/airflow/jars/postgresql-42.7.1.jar,/usr/local/airflow/jars/gcs-connector-hadoop3-latest.jar") \
+        .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
+        .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS") \
         .getOrCreate()
-    spark.sparkContext.setLogLevel("INFO")
-    log.info("Spark session initialized")
+    spark._jsc.hadoopConfiguration().set( "google.cloud.auth.service.account.json.keyfile","/usr/local/airflow/jars/meta-morph-d-eng-pro-view-key.json"
+)
+       
+    log.info("spark session created")
     return spark
 
 #Extractor class handles API data extraction 
@@ -73,13 +77,13 @@ class DuplicateException(Exception):
 class Duplicate_check:
     @classmethod
     def has_duplicates(cls, df, primary_key_list):
-        logging.info("Checking for duplicates in the given data")
+        log.info("Checking for duplicates in the given data")
         grouped_df = df.groupBy(primary_key_list)\
                       .agg(count('*').alias('cnt'))\
-                      .filter('cnt > 1')
+                      .filter(col("cnt") > 1)
         if grouped_df.count() > 0:
             raise DuplicateException(f"Found duplicates in columns: {primary_key_list}")
-        logging.info("No duplicates found")
+        log.info("No duplicates found")
 
 
     
@@ -91,7 +95,7 @@ def load_to_postgres(df, table_name):
         "password": POSTGRES_PASSWORD,
         "driver": "org.postgresql.Driver"
     }
-
+    log.info(f"Loading data into PostgreSQL table: {table_name}") 
     df.write.jdbc(
         url=jdbc_url,
         table=table_name,
