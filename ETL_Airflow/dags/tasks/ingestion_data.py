@@ -51,7 +51,6 @@ def m_ingest_data_into_suppliers():
      
     except Exception as e:
         log.error(f"Suppliers ETL failed: {str(e)}", exc_info=True)
-        raise
 
     finally:
         end_session(spark)
@@ -106,7 +105,7 @@ def m_ingest_data_into_products():
 
     except Exception as e:
         log.error(f"Products ETL failed: {str(e)}", exc_info=True)
-        raise
+    
 
     finally:
         end_session(spark)
@@ -150,7 +149,7 @@ def m_ingest_data_into_customers():
 
     except Exception as e:
         log.error(f"Customers ETL failed: {str(e)}", exc_info=True)
-        raise
+    
 
     finally:
         end_session(spark)
