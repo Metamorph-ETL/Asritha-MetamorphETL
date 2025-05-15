@@ -4,7 +4,7 @@ from secret_key import POSTGRES_PASSWORD
 from pyspark.sql.functions import count
 import logging
 from airflow.exceptions import AirflowException
-from secret_key import TOKEN_URL,USERNAME,PASSWORD
+from secret_key import USERNAME,PASSWORD
 from pyspark.sql.functions import col
 
 # Initialize logger
@@ -13,7 +13,7 @@ log.setLevel(logging.INFO)
 
 #create and configure Spark session
 def create_session():
-    log.info("Starting ETL process")
+    log.info("Initialising the spark Session")
     spark = SparkSession.builder.appName("GCS_to_Postgres") \
         .config("spark.jars", "/usr/local/airflow/jars/postgresql-42.7.1.jar,/usr/local/airflow/jars/gcs-connector-hadoop3-latest.jar") \
         .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
@@ -27,18 +27,20 @@ def create_session():
 
 #Extractor class handles API data extraction 
 class Extractor:
-    def __init__(self, url, token=None):
-        self.url = url
+    def __init__(self, endpoint, token=None):
+        self.base_url = "http://host.docker.internal:8000" 
+        self.url = f"{self.base_url}{endpoint}"
         self.token = token
 
 # Automatically fetch token if it's a customer API and no token is provided
-        if "customers" in url and token is None:  
+        if "customers" in endpoint and token is None:  
             self.token = self._get_token()
 
 # Private method to fetch bearer token from TOKEN_URL
     def _get_token(self):
+        token_url = f"{self.base_url}/token"
         try:
-            response = requests.post(TOKEN_URL, data={
+            response = requests.post(token_url, data={
                 "username": USERNAME,
                 "password": PASSWORD,  
             })
@@ -103,3 +105,9 @@ def load_to_postgres(df, table_name):
         properties=properties
     )
     log.info("Loaded data successfully")
+
+
+def end_session(spark):
+        log.info("Stopping Spark session...")
+        spark.stop()
+        log.info("Spark session stopped.")
