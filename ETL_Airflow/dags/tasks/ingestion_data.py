@@ -34,13 +34,13 @@ def m_ingest_data_into_suppliers():
                                 col("SUPPLIER_NAME"),
                                 col("CONTACT_DETAILS"),
                                 col("REGION")
-            )
+                            )
     
         
         # Check for duplicate SUPPLIER_IDs
         checker=Duplicate_check()
-        if checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"]):
-            raise AirflowException("Duplicate IDs found")
+        checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])
+      
         
         log.info(f"suppliers data cleaned and ready for loading : {suppliers_df_tgt.count()} records processed")
         
@@ -54,7 +54,7 @@ def m_ingest_data_into_suppliers():
         raise
 
     finally:
-        terminator=end_session(spark)
+        end_session(spark)
 
 #create a task that ingests data into raw.products table
 @task
@@ -90,12 +90,12 @@ def m_ingest_data_into_products():
                                     col("STOCK_QUANTITY"),
                                     col("REORDER_LEVEL"),
                                     col("SUPPLIER_ID")
-            )
+                                )
 
         # Check for duplicate PRODUCT_IDs
         checker=Duplicate_check()
-        if checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"]):
-            raise AirflowException("Duplicate IDs found")
+        checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
+       
         
         log.info(f"products data cleaned and ready for loading : {products_df_tgt.count()} records processed")
 
@@ -109,7 +109,7 @@ def m_ingest_data_into_products():
         raise
 
     finally:
-        terminator=end_session(spark)
+        end_session(spark)
 
 #create a task that ingests data into raw.customers table
 @task
@@ -134,12 +134,12 @@ def m_ingest_data_into_customers():
                                 col("CITY"),
                                 col("EMAIL"),
                                 col("PHONE_NUMBER")
-            )
+                            )
         
         # Check for duplicate CUSTOMER_IDs
         checker=Duplicate_check()
-        if checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"]):
-            raise AirflowException("Duplicate IDs found")
+        checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
+        
         
         log.info(f"products data cleaned and ready for loading : {customers_df_tgt.count()} records processed")
 
@@ -153,15 +153,16 @@ def m_ingest_data_into_customers():
         raise
 
     finally:
-        terminator=end_session(spark)
+        end_session(spark)
 
 #create a task that ingests data into raw.sales table
 @task
-def m_ingest_data_into_sales(today_str: str = "20250322"):
+def m_ingest_data_into_sales():
     try:
         spark=create_session()
         # Define the GCS bucket name
         GCS_BUCKET_NAME = "meta-morph"
+        today_str= "20250322"
 
         #GCS path to the sales CSV file for today's date
         gcs_path = f"gs://{GCS_BUCKET_NAME}/{today_str}/sales_{today_str}.csv"
@@ -195,13 +196,12 @@ def m_ingest_data_into_sales(today_str: str = "20250322"):
                             col("SHIPPING_COST"),
                             col("ORDER_STATUS"),
                             col("PAYMENT_MODE")
-            )
+                        )
     
          
         # Check for duplicates based on SALE_ID column
         checker=Duplicate_check()
-        if checker.has_duplicates(sales_df_tgt, ["SALE_ID"]):
-            raise AirflowException("Duplicate IDs found")
+        checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
         log.info(f"sales data cleaned and ready for loading : {sales_df_tgt.count()} records processed")
 
@@ -214,4 +214,4 @@ def m_ingest_data_into_sales(today_str: str = "20250322"):
         log.error(f"Error occurred: {e}")
     
     finally:
-        terminator=end_session(spark)
+        end_session(spark)
