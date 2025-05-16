@@ -4,7 +4,8 @@ from secret_key import POSTGRES_PASSWORD
 from pyspark.sql.functions import count
 import logging
 from airflow.exceptions import AirflowException
-from secret_key import TOKEN_URL,USERNAME,PASSWORD
+from secret_key import USERNAME,PASSWORD
+from pyspark.sql.functions import col
 
 # Initialize logger
 log = logging.getLogger("etl_logger")
@@ -12,29 +13,34 @@ log.setLevel(logging.INFO)
 
 #create and configure Spark session
 def create_session():
-    log.info("Starting ETL process")
-    spark = SparkSession.builder\
-        .appName("ETL")\
-        .config("spark.jars", "/usr/local/airflow/jars/postgresql-42.7.1.jar")\
+    log.info("Initialising the spark Session")
+    spark = SparkSession.builder.appName("GCS_to_Postgres") \
+        .config("spark.jars", "/usr/local/airflow/jars/postgresql-42.7.1.jar,/usr/local/airflow/jars/gcs-connector-hadoop3-latest.jar") \
+        .config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
+        .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS") \
         .getOrCreate()
-    spark.sparkContext.setLogLevel("INFO")
-    log.info("Spark session initialized")
+    spark._jsc.hadoopConfiguration().set( "google.cloud.auth.service.account.json.keyfile","/usr/local/airflow/jars/meta-morph-d-eng-pro-view-key.json"
+)
+       
+    log.info("spark session created")
     return spark
 
 #Extractor class handles API data extraction 
 class Extractor:
-    def __init__(self, url, token=None):
-        self.url = url
+    def __init__(self, endpoint, token=None):
+        self.base_url = "http://host.docker.internal:8000" 
+        self.url = f"{self.base_url}{endpoint}"
         self.token = token
 
 # Automatically fetch token if it's a customer API and no token is provided
-        if "customers" in url and token is None:  
+        if "customers" in endpoint and token is None:  
             self.token = self._get_token()
 
 # Private method to fetch bearer token from TOKEN_URL
     def _get_token(self):
+        token_url = f"{self.base_url}/token"
         try:
-            response = requests.post(TOKEN_URL, data={
+            response = requests.post(token_url, data={
                 "username": USERNAME,
                 "password": PASSWORD,  
             })
@@ -62,8 +68,6 @@ class Extractor:
             log.error(error_msg)
             raise AirflowException(error_msg)
 
-
-
 # Custom exception for duplicate detection
 
 class DuplicateException(Exception):
@@ -73,14 +77,13 @@ class DuplicateException(Exception):
 class Duplicate_check:
     @classmethod
     def has_duplicates(cls, df, primary_key_list):
-        logging.info("Checking for duplicates in the given data")
+        log.info("Checking for duplicates in the given data")
         grouped_df = df.groupBy(primary_key_list)\
                       .agg(count('*').alias('cnt'))\
-                      .filter('cnt > 1')
+                      .filter(col("cnt") > 1)
         if grouped_df.count() > 0:
             raise DuplicateException(f"Found duplicates in columns: {primary_key_list}")
-        logging.info("No duplicates found")
-
+        log.info("No duplicates found")
 
     
 # Function to load Spark DataFrame to PostgreSQL table
@@ -91,7 +94,7 @@ def load_to_postgres(df, table_name):
         "password": POSTGRES_PASSWORD,
         "driver": "org.postgresql.Driver"
     }
-
+    log.info(f"Loading data into PostgreSQL table: {table_name}") 
     df.write.jdbc(
         url=jdbc_url,
         table=table_name,
@@ -99,3 +102,10 @@ def load_to_postgres(df, table_name):
         properties=properties
     )
     log.info("Loaded data successfully")
+    return f"Task for loading data into {table_name} completed successfully"
+
+
+def end_session(spark):
+        log.info("Stopping Spark session...")
+        spark.stop()
+        log.info("Spark session stopped.")
