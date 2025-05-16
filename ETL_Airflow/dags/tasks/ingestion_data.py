@@ -39,15 +39,13 @@ def m_ingest_data_into_suppliers():
         
         # Check for duplicate SUPPLIER_IDs
         checker=Duplicate_check()
-        checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])
-      
+        checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
         
         log.info(f"suppliers data cleaned and ready for loading : {suppliers_df_tgt.count()} records processed")
-        
-        log.info("Writing data to PostgreSQL (raw.suppliers")
-
+    
          # Load the cleaned data into the raw.suppliers table
         load_to_postgres(suppliers_df_tgt, "raw.suppliers")
+        return "Task for loading Suppliers got completed successfully."
      
     except Exception as e:
         log.error(f"Suppliers ETL failed: {str(e)}", exc_info=True)
@@ -98,10 +96,10 @@ def m_ingest_data_into_products():
         
         log.info(f"products data cleaned and ready for loading : {products_df_tgt.count()} records processed")
 
-        log.info("Writing data to PostgreSQL (raw.products)")
-        
          # Load the cleaned data into the raw.products table
         load_to_postgres(products_df_tgt, "raw.products")
+
+        return "Task for loading products got completed successfully."
 
     except Exception as e:
         log.error(f"Products ETL failed: {str(e)}", exc_info=True)
@@ -142,10 +140,9 @@ def m_ingest_data_into_customers():
         
         log.info(f"products data cleaned and ready for loading : {customers_df_tgt.count()} records processed")
 
-        log.info("Writing data to PostgreSQL (raw.customers)")
-
          # Load the cleaned data into the raw.customers table
         load_to_postgres(customers_df_tgt, "raw.customers")
+        return "Task for loading customers got completed successfully."
 
     except Exception as e:
         log.error(f"Customers ETL failed: {str(e)}", exc_info=True)
@@ -203,11 +200,10 @@ def m_ingest_data_into_sales():
         checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
         log.info(f"sales data cleaned and ready for loading : {sales_df_tgt.count()} records processed")
-
-        log.info("Writing data to PostgreSQL (raw.sales)")
         
         #writing data to PostgreSQL
         load_to_postgres(sales_df_tgt, "raw.sales")
+        return "Task for loading Sales got completed successfully."
    
     except Exception as e:
         log.error(f"Error occurred: {e}")

@@ -68,8 +68,6 @@ class Extractor:
             log.error(error_msg)
             raise AirflowException(error_msg)
 
-
-
 # Custom exception for duplicate detection
 
 class DuplicateException(Exception):
@@ -86,7 +84,6 @@ class Duplicate_check:
         if grouped_df.count() > 0:
             raise DuplicateException(f"Found duplicates in columns: {primary_key_list}")
         log.info("No duplicates found")
-
 
     
 # Function to load Spark DataFrame to PostgreSQL table
@@ -105,6 +102,7 @@ def load_to_postgres(df, table_name):
         properties=properties
     )
     log.info("Loaded data successfully")
+    return f"Task for loading data into {table_name} completed successfully"
 
 
 def end_session(spark):
