@@ -17,7 +17,7 @@ def m_ingest_data_into_suppliers():
 
         data = extractor.extract_data()
         
-         # Convert extracted JSON data to Spark DataFrame
+        # Convert extracted JSON data to Spark DataFrame
         suppliers_df = spark.createDataFrame(data)
 
         # Rename columns
@@ -36,12 +36,11 @@ def m_ingest_data_into_suppliers():
                                 col("REGION")
                             )
     
-        
         # Check for duplicate SUPPLIER_IDs
         checker=Duplicate_check()
         checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
-        
-         # Load the cleaned data into the raw.suppliers table
+
+        # Load the cleaned data into the raw.suppliers table
         load_to_postgres(suppliers_df_tgt, "raw.suppliers")
         return "Task for loading Suppliers got completed successfully."
      
@@ -59,9 +58,9 @@ def m_ingest_data_into_products():
         
         # Extract products data from API
         extractor = Extractor("/v1/products")
-
+  
         data = extractor.extract_data()
-         
+        
         # Convert extracted JSON data to Spark DataFrame
         products_df = spark.createDataFrame(data)
 
@@ -70,7 +69,8 @@ def m_ingest_data_into_products():
                         .withColumnRenamed("product_id", "PRODUCT_ID") \
                         .withColumnRenamed("product_name", "PRODUCT_NAME") \
                         .withColumnRenamed("category", "CATEGORY") \
-                        .withColumnRenamed("price", "PRICE") \
+                        .withColumnRenamed("selling_price", "SELLING_PRICE") \
+                        .withColumnRenamed( "cost_price","COST_PRICE") \
                         .withColumnRenamed("stock_quantity", "STOCK_QUANTITY") \
                         .withColumnRenamed("reorder_level", "REORDER_LEVEL") \
                         .withColumnRenamed("supplier_id", "SUPPLIER_ID")
@@ -81,12 +81,13 @@ def m_ingest_data_into_products():
                                     col("PRODUCT_ID"),
                                     col("PRODUCT_NAME"),
                                     col("CATEGORY"),
-                                    col("PRICE"),
+                                    col("SELLING_PRICE"),
+                                    col("COST_PRICE"),
                                     col("STOCK_QUANTITY"),
                                     col("REORDER_LEVEL"),
                                     col("SUPPLIER_ID")
                                 )
-
+        
         # Check for duplicate PRODUCT_IDs
         checker=Duplicate_check()
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
