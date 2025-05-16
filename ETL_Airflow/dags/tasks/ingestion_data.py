@@ -41,8 +41,6 @@ def m_ingest_data_into_suppliers():
         checker=Duplicate_check()
         checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
         
-        log.info(f"suppliers data cleaned and ready for loading : {suppliers_df_tgt.count()} records processed")
-    
          # Load the cleaned data into the raw.suppliers table
         load_to_postgres(suppliers_df_tgt, "raw.suppliers")
         return "Task for loading Suppliers got completed successfully."
@@ -93,9 +91,6 @@ def m_ingest_data_into_products():
         checker=Duplicate_check()
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
        
-        
-        log.info(f"products data cleaned and ready for loading : {products_df_tgt.count()} records processed")
-
          # Load the cleaned data into the raw.products table
         load_to_postgres(products_df_tgt, "raw.products")
 
@@ -136,9 +131,6 @@ def m_ingest_data_into_customers():
         # Check for duplicate CUSTOMER_IDs
         checker=Duplicate_check()
         checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
-        
-        
-        log.info(f"products data cleaned and ready for loading : {customers_df_tgt.count()} records processed")
 
          # Load the cleaned data into the raw.customers table
         load_to_postgres(customers_df_tgt, "raw.customers")
@@ -199,8 +191,6 @@ def m_ingest_data_into_sales():
         checker=Duplicate_check()
         checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
-        log.info(f"sales data cleaned and ready for loading : {sales_df_tgt.count()} records processed")
-        
         #writing data to PostgreSQL
         load_to_postgres(sales_df_tgt, "raw.sales")
         return "Task for loading Sales got completed successfully."
