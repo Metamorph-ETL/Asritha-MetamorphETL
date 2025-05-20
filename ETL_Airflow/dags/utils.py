@@ -87,7 +87,7 @@ class Duplicate_check:
 
     
 # Function to load Spark DataFrame to PostgreSQL table
-def load_to_postgres(df, table_name):
+def load_to_postgres(df, table_name,mode):
     jdbc_url = "jdbc:postgresql://host.docker.internal:5432/meta_morph"
     properties = {
         "user": "postgres",
@@ -98,7 +98,7 @@ def load_to_postgres(df, table_name):
     df.write.jdbc(
         url=jdbc_url,
         table=table_name,
-        mode="overwrite",
+        mode=mode,
         properties=properties
     )
     log.info("Loaded data successfully")
@@ -109,3 +109,21 @@ def end_session(spark):
         log.info("Stopping Spark session...")
         spark.stop()
         log.info("Spark session stopped.")
+
+
+
+def read_from_postgres(spark, table_name):
+    jdbc_url = "jdbc:postgresql://host.docker.internal:5432/meta_morph"
+    properties = {
+        "user": "postgres",
+        "password": POSTGRES_PASSWORD,
+        "driver": "org.postgresql.Driver"
+    }
+    log.info(f"Reading table {table_name} from PostgreSQL")
+    df = spark.read.jdbc(
+        url=jdbc_url,
+        table=table_name,
+        properties=properties
+    )
+    log.info(f"Read {df.count()} records from {table_name}")
+    return df
