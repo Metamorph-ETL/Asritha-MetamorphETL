@@ -44,7 +44,7 @@ def m_ingest_data_into_suppliers():
         checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
 
         # Load the cleaned data into the raw.suppliers table
-        load_to_postgres(suppliers_df_tgt, "raw.suppliers")
+        load_to_postgres(suppliers_df_tgt, "raw.suppliers","overwite")
         return "Task for loading Suppliers got completed successfully."
      
     except Exception as e:
@@ -96,7 +96,7 @@ def m_ingest_data_into_products():
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
        
          # Load the cleaned data into the raw.products table
-        load_to_postgres(products_df_tgt, "raw.products")
+        load_to_postgres(products_df_tgt, "raw.products","overwrite")
 
         return "Task for loading products got completed successfully."
 
@@ -137,7 +137,7 @@ def m_ingest_data_into_customers():
         checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
 
          # Load the cleaned data into the raw.customers table
-        load_to_postgres(customers_df_tgt, "raw.customers")
+        load_to_postgres(customers_df_tgt, "raw.customers","overwrite")
         return "Task for loading customers got completed successfully."
 
     except Exception as e:
@@ -196,92 +196,11 @@ def m_ingest_data_into_sales():
         checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
         #writing data to PostgreSQL
-        load_to_postgres(sales_df_tgt, "raw.sales")
+        load_to_postgres(sales_df_tgt, "raw.sales","overwrie")
         return "Task for loading Sales got completed successfully."
    
     except Exception as e:
         log.error(f"Error occurred: {e}")
     
-    finally:
-        end_session(spark)
-
-
-@task
-def m_calculate_supplier_performance():
-    try:
-        spark = create_session()
-
-        # Read necessary tables
-        sales_df = read_from_postgres(spark, "raw.sales")
-        products_df = read_from_postgres(spark, "raw.products")
-        suppliers_df = read_from_postgres(spark, "raw.suppliers")
-
-        log.info("Successfully read tables from PostgreSQL")
-
-        # Check for duplicate sales IDs
-        checker = Duplicate_check()
-        checker.has_duplicates(sales_df, ["SALE_ID"])
-
-        # Filter out cancelled orders
-        sales_df = sales_df.filter(col("ORDER_STATUS") != "Cancelled")
-
-        # Join sales with products and suppliers
-        sales_products = (
-            sales_df.join(products_df, "PRODUCT_ID", "left")
-                    .join(suppliers_df, "SUPPLIER_ID", "left")
-        )
-
-        # Calculate revenue
-        sales_products = sales_products.withColumn(
-            "REVENUE", col("QUANTITY") * col("SELLING_PRICE")
-        )
-
-        # Supplier-level metrics
-        supplier_metrics = sales_products.groupBy("SUPPLIER_ID") \
-            .agg(
-                sum(col("REVENUE")).alias("TOTAL_REVENUE"),
-                sum("QUANTITY").alias("TOTAL_STOCK_SOLD"),
-                countDistinct("PRODUCT_ID").alias("TOTAL_PRODUCTS_SOLD")
-            )
-
-        # Top-selling product per supplier (based on REVENUE)
-
-
-        window_spec = Window.partitionBy("SUPPLIER_ID").orderBy(col("REVENUE").desc(), col("PRODUCT_NAME"))
-
-        top_products = sales_products.withColumn("row_num", row_number().over(window_spec)) \
-            .filter(col("row_num") == 1) \
-            .select(
-               col("SUPPLIER_ID"),
-               col("PRODUCT_NAME").alias("TOP_SELLING_PRODUCT")
-                   )
- 
-        # Final result
-        final_df = supplier_metrics \
-            .join(suppliers_df.select("SUPPLIER_ID", "SUPPLIER_NAME"), "SUPPLIER_ID") \
-            .join(top_products, "SUPPLIER_ID") \
-            .withColumn("DAY_DT", current_date()) \
-            .select(
-                col("DAY_DT"),
-                col("SUPPLIER_ID"),
-                col("SUPPLIER_NAME"),
-                col("TOTAL_REVENUE"),
-                col("TOTAL_PRODUCTS_SOLD"),
-                col("TOTAL_STOCK_SOLD"),
-                col("TOP_SELLING_PRODUCT")
-            )
-
-        #  Check for duplicates per supplier/day
-        checker.has_duplicates(final_df, ["SUPPLIER_ID", "DAY_DT"])
-
-        # Load to PostgreSQL (append mode)
-        load_to_postgres(final_df, "legacy.Supplier_Performance", mode="append")
-
-        log.info("Loaded Supplier Performance successfully.")
-        return "Supplier performance calculation completed successfully."
-
-    except Exception as e:
-        log.error(f"Supplier performance calculation failed: {str(e)}", exc_info=True)
-
     finally:
         end_session(spark)
