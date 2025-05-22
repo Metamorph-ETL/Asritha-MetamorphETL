@@ -14,17 +14,17 @@ from tasks.supplier_perfomance_task import (
     dag_id="metamorph_etl_pipeline",
     schedule_interval='@daily',
     start_date=datetime(2025, 5, 6),
-    catchup=False,
+    catchup=False, 
     tags=["ETL"]
 )
 def etl_process():
-    supplier_task = m_ingest_data_into_suppliers()
+    """supplier_task = m_ingest_data_into_suppliers()
     product_task = m_ingest_data_into_products()
     customer_task = m_ingest_data_into_customers()
-    sale_task = m_ingest_data_into_sales()
+    sale_task = m_ingest_data_into_sales()"""
     supplier_perfomance=m_calculate_supplier_perfomance()
     
-    [supplier_task, product_task, customer_task, sale_task] >> supplier_perfomance
+    #[supplier_task, product_task, customer_task, sale_task] >> supplier_perfomance
 
 
 dag_instance = etl_process()

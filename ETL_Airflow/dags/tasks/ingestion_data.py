@@ -44,11 +44,12 @@ def m_ingest_data_into_suppliers():
         checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
 
         # Load the cleaned data into the raw.suppliers table
-        load_to_postgres(suppliers_df_tgt, "raw.suppliers","overwite")
+        load_to_postgres(suppliers_df_tgt, "raw.suppliers","overwrite")
         return "Task for loading Suppliers got completed successfully."
      
     except Exception as e:
         log.error(f"Suppliers ETL failed: {str(e)}", exc_info=True)
+        raise AirflowException("Suppliers ETL failed")
 
     finally:
         end_session(spark)
@@ -102,6 +103,7 @@ def m_ingest_data_into_products():
 
     except Exception as e:
         log.error(f"Products ETL failed: {str(e)}", exc_info=True)
+        raise AirflowException("Products ETL failed")
     
 
     finally:
@@ -142,6 +144,7 @@ def m_ingest_data_into_customers():
 
     except Exception as e:
         log.error(f"Customers ETL failed: {str(e)}", exc_info=True)
+        raise AirflowException("Customers ETL failed")
     
 
     finally:
@@ -196,11 +199,12 @@ def m_ingest_data_into_sales():
         checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
         #writing data to PostgreSQL
-        load_to_postgres(sales_df_tgt, "raw.sales","overwrie")
+        load_to_postgres(sales_df_tgt, "raw.sales","overwrite")
         return "Task for loading Sales got completed successfully."
    
     except Exception as e:
         log.error(f"Error occurred: {e}")
+        raise AirflowException("sales ETL failed")
     
     finally:
         end_session(spark)
