@@ -10,7 +10,7 @@ from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number
 
 #create a task that ingests data into raw.suppliers table
-@task
+@task(task_id="m_ingest_data_into_suppliers")
 def m_ingest_data_into_suppliers():
     try:
         spark = create_session()
@@ -44,7 +44,7 @@ def m_ingest_data_into_suppliers():
         checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
 
         # Load the cleaned data into the raw.suppliers table
-        load_to_postgres(suppliers_df_tgt, "raw.suppliers","overwrite")
+        load_to_postgres(suppliers_df_tgt, "raw.suppliers", "overwrite")
         return "Task for loading Suppliers got completed successfully."
      
     except Exception as e:
@@ -55,7 +55,7 @@ def m_ingest_data_into_suppliers():
         end_session(spark)
 
 #create a task that ingests data into raw.products table
-@task
+@task(task_id="m_ingest_data_into_products")
 def m_ingest_data_into_products():
     try:
         spark = create_session()
@@ -97,7 +97,7 @@ def m_ingest_data_into_products():
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
        
          # Load the cleaned data into the raw.products table
-        load_to_postgres(products_df_tgt, "raw.products","overwrite")
+        load_to_postgres(products_df_tgt, "raw.products", "overwrite")
 
         return "Task for loading products got completed successfully."
 
@@ -110,7 +110,7 @@ def m_ingest_data_into_products():
         end_session(spark)
 
 #create a task that ingests data into raw.customers table
-@task
+@task(task_id="m_ingest_data_into_customers")
 def m_ingest_data_into_customers():
     try:
         spark = create_session()
@@ -139,7 +139,7 @@ def m_ingest_data_into_customers():
         checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
 
          # Load the cleaned data into the raw.customers table
-        load_to_postgres(customers_df_tgt, "raw.customers","overwrite")
+        load_to_postgres(customers_df_tgt, "raw.customers", "overwrite")
         return "Task for loading customers got completed successfully."
 
     except Exception as e:
@@ -151,7 +151,7 @@ def m_ingest_data_into_customers():
         end_session(spark)
 
 #create a task that ingests data into raw.sales table
-@task
+@task(task_id="m_ingest_data_into_sales")
 def m_ingest_data_into_sales():
     try:
         spark=create_session()
@@ -199,7 +199,7 @@ def m_ingest_data_into_sales():
         checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
         #writing data to PostgreSQL
-        load_to_postgres(sales_df_tgt, "raw.sales","overwrite")
+        load_to_postgres(sales_df_tgt, "raw.sales", "overwrite")
         return "Task for loading Sales got completed successfully."
    
     except Exception as e:
