@@ -108,8 +108,16 @@ def m_load_suppliers_perfomance():
                                                         col("SUPPLIER_ID"), 
                                                         col("SUPPLIER_NAME")
                                                     )\
-                                                    .join(AGG_TRANS_Product, "SUPPLIER_ID", "left")\
-                                                    .join(Top_Selling_Product_df, "SUPPLIER_ID", "left")\
+                                                    .join(
+                                                        AGG_TRANS_Product, 
+                                                        on="SUPPLIER_ID", 
+                                                        how="left"
+                                                    )\
+                                                    .join(
+                                                        Top_Selling_Product_df, 
+                                                        on="SUPPLIER_ID", 
+                                                        how="left"
+                                                    )\
                                                     .withColumn("DAY_DT", current_date())\
                                                     .select(
                                                         col("DAY_DT"),
