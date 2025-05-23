@@ -1,13 +1,16 @@
 from pyspark.sql.functions import count,col
 from airflow.decorators import task
 from airflow.exceptions import AirflowException
-from utils import create_session, load_to_postgres, Extractor, log,Duplicate_check,end_session
+from utils import create_session, load_to_postgres, Extractor, log, Duplicate_check, end_session, read_from_postgres
 from secret_key import  POSTGRES_PASSWORD
 from dotenv import load_dotenv
 load_dotenv()
+from pyspark.sql.functions import sum, col, countDistinct, rank, current_date
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number
 
 #create a task that ingests data into raw.suppliers table
-@task
+@task(task_id="m_ingest_data_into_suppliers")
 def m_ingest_data_into_suppliers():
     try:
         spark = create_session()
@@ -41,17 +44,18 @@ def m_ingest_data_into_suppliers():
         checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
 
         # Load the cleaned data into the raw.suppliers table
-        load_to_postgres(suppliers_df_tgt, "raw.suppliers")
+        load_to_postgres(suppliers_df_tgt, "raw.suppliers", "overwrite")
         return "Task for loading Suppliers got completed successfully."
      
     except Exception as e:
         log.error(f"Suppliers ETL failed: {str(e)}", exc_info=True)
+        raise AirflowException("Suppliers ETL failed")
 
     finally:
         end_session(spark)
 
 #create a task that ingests data into raw.products table
-@task
+@task(task_id="m_ingest_data_into_products")
 def m_ingest_data_into_products():
     try:
         spark = create_session()
@@ -93,19 +97,20 @@ def m_ingest_data_into_products():
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
        
          # Load the cleaned data into the raw.products table
-        load_to_postgres(products_df_tgt, "raw.products")
+        load_to_postgres(products_df_tgt, "raw.products", "overwrite")
 
         return "Task for loading products got completed successfully."
 
     except Exception as e:
         log.error(f"Products ETL failed: {str(e)}", exc_info=True)
+        raise AirflowException("Products ETL failed")
     
 
     finally:
         end_session(spark)
 
 #create a task that ingests data into raw.customers table
-@task
+@task(task_id="m_ingest_data_into_customers")
 def m_ingest_data_into_customers():
     try:
         spark = create_session()
@@ -134,18 +139,19 @@ def m_ingest_data_into_customers():
         checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
 
          # Load the cleaned data into the raw.customers table
-        load_to_postgres(customers_df_tgt, "raw.customers")
+        load_to_postgres(customers_df_tgt, "raw.customers", "overwrite")
         return "Task for loading customers got completed successfully."
 
     except Exception as e:
         log.error(f"Customers ETL failed: {str(e)}", exc_info=True)
+        raise AirflowException("Customers ETL failed")
     
 
     finally:
         end_session(spark)
 
 #create a task that ingests data into raw.sales table
-@task
+@task(task_id="m_ingest_data_into_sales")
 def m_ingest_data_into_sales():
     try:
         spark=create_session()
@@ -193,11 +199,12 @@ def m_ingest_data_into_sales():
         checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
         #writing data to PostgreSQL
-        load_to_postgres(sales_df_tgt, "raw.sales")
+        load_to_postgres(sales_df_tgt, "raw.sales", "overwrite")
         return "Task for loading Sales got completed successfully."
    
     except Exception as e:
         log.error(f"Error occurred: {e}")
+        raise AirflowException("sales ETL failed")
     
     finally:
         end_session(spark)
