@@ -13,72 +13,80 @@ def m_load_suppliers_perfomance():
         #Processing Node : SQ_Shortcut_To_Sales - Reads data from 'raw.sales' table
         SQ_Shortcut_To_Sales =  read_from_postgres(spark, "raw.sales")\
                                 .select(
-                                    col("PRODUCT_ID"),
-                                    col("QUANTITY"),
-                                    col("ORDER_STATUS")
+                                        col("PRODUCT_ID"),
+                                        col("QUANTITY"),
+                                        col("ORDER_STATUS")
                                 )
         log.info("Data Frame : 'SQ_Shortcut_To_Sales' is built")
         
         #Processing Node : SQ_Shortcut_To_Products - Reads data from 'raw.products' table
         SQ_Shortcut_To_Products = read_from_postgres(spark, "raw.products")\
-                                .select(                                      
-                                    col("PRODUCT_ID"),
-                                    col("SUPPLIER_ID"),
-                                    col("PRODUCT_NAME"),
-                                    col("SELLING_PRICE")                                   
+                                  .select(                                      
+                                         col("PRODUCT_ID"),
+                                         col("SUPPLIER_ID"),
+                                         col("PRODUCT_NAME"),
+                                         col("SELLING_PRICE")                                   
                                  )
         log.info("Data Frame : 'SQ_Shortcut_To_Products' is built")
 
         #Processing Node : SQ_Shortcut_To_Sales - Reads data from 'raw.suppliers' table
         SQ_Shortcut_To_Suppliers = read_from_postgres(spark, "raw.suppliers")\
                                    .select(
-                                       col("SUPPLIER_ID"),
-                                       col("SUPPLIER_NAME")
+                                            col("SUPPLIER_ID"),
+                                            col("SUPPLIER_NAME")
                                    )
         log.info("Data Frame : 'SQ_Shortcut_To_Suppliers' is built")
 
-        #Processing Node : FIL_Sales_Cancelled - Reads data from 'raw.sales' table
+        #Processing Node : FIL_Sales_Cancelled -  Filter out records where ORDER_STATUS is 'Cancelled'
         FIL_Sales_Cancelled = SQ_Shortcut_To_Sales\
-                            .filter(col("ORDER_STATUS") != "Cancelled")
+                             .filter(
+                                    col("ORDER_STATUS") != "Cancelled"
+                             )
         
         log.info("Data Frame : 'FIL_Cancelled_Sales' is built")
 
         #Processing Node : JNR_Sales_Products  - Reads data from 'raw.products' and 'raw.sales' tables
         JNR_Sales_Products = FIL_Sales_Cancelled\
-                             .join(SQ_Shortcut_To_Products, "PRODUCT_ID", "left")\
+                             .join(
+                                    SQ_Shortcut_To_Products, 
+                                    on="PRODUCT_ID",
+                                    how="left"
+                             )\
                              .select(
-                                FIL_Sales_Cancelled["QUANTITY"],
-                                SQ_Shortcut_To_Products["PRODUCT_ID"],
-                                SQ_Shortcut_To_Products["SUPPLIER_ID"],
-                                SQ_Shortcut_To_Products["PRODUCT_NAME"],
-                                SQ_Shortcut_To_Products["SELLING_PRICE"]
+                                     FIL_Sales_Cancelled.QUANTITY,
+                                     SQ_Shortcut_To_Products.PRODUCT_ID,
+                                     SQ_Shortcut_To_Products.SUPPLIER_ID,
+                                     SQ_Shortcut_To_Products.PRODUCT_NAME,
+                                     SQ_Shortcut_To_Products.SELLING_PRICE
                              )
-
         log.info("Data Frame : 'JNR_Sales_Products' is built")
         
         #Processing Node : JNR_Sales_Suppliers  - Reads data from JNR_Sales_Products and 'raw.suppliers' tables
-        JNR_Products_Suppliers = JNR_Sales_Products.join(SQ_Shortcut_To_Suppliers, "SUPPLIER_ID", "right")\
-                                 .select(
-                                        JNR_Sales_Products["PRODUCT_ID"],
-                                        JNR_Sales_Products["PRODUCT_NAME"],
-                                        JNR_Sales_Products["QUANTITY"],
-                                        JNR_Sales_Products["SELLING_PRICE"],
-                                        SQ_Shortcut_To_Suppliers["SUPPLIER_ID"],
-                                        SQ_Shortcut_To_Suppliers["SUPPLIER_NAME"]
+        JNR_Products_Suppliers = JNR_Sales_Products\
+                                 .join(
+                                        SQ_Shortcut_To_Suppliers,
+                                        on="SUPPLIER_ID",
+                                        how="right"
                                  )\
-                                 .withColumn("REVENUE", col("QUANTITY") * col("SELLING_PRICE"))
-                                
+                                 .select(
+                                         JNR_Sales_Products.PRODUCT_ID,
+                                         JNR_Sales_Products.PRODUCT_NAME,
+                                         JNR_Sales_Products.QUANTITY,
+                                         JNR_Sales_Products.SELLING_PRICE,
+                                         SQ_Shortcut_To_Suppliers.SUPPLIER_ID,
+                                         SQ_Shortcut_To_Suppliers.SUPPLIER_NAME
+                                 )\
+                                 .withColumn("REVENUE", col("QUANTITY") * col("SELLING_PRICE"))                          
         log.info("Data Frame : 'JNR_Products_Suppliers' is built")  
   
         # Processing Node : AGG_TRANS_Product_Level - Aggregates data at the product level per supplier       
         AGG_TRANS_Product =  JNR_Products_Suppliers\
                             .groupBy("SUPPLIER_ID")\
                             .agg(
-                                sum("REVENUE").alias("agg_total_revenue"),
-                                sum("QUANTITY").alias("agg_total_quantity"),
-                                countDistinct("PRODUCT_ID").alias("TOTAL_PRODUCTS_SOLD")
-                            )
-        
+                                    sum("REVENUE").alias("agg_total_revenue"),
+                                    sum("QUANTITY").alias("agg_total_quantity"),
+                                    countDistinct("PRODUCT_ID").alias("TOTAL_PRODUCTS_SOLD")
+                            ) 
         log.info("Data Frame : 'AGG_TRANS_Product' is built")
 
         # Processing Node : RNK_Suppliers - Ranks suppliers per supplier based on revenue
@@ -90,34 +98,37 @@ def m_load_suppliers_perfomance():
                                  .withColumn("row_num", row_number().over(RNK_Suppliers))\
                                  .filter(col("row_num") == 1)\
                                  .select(
-                                     col("SUPPLIER_ID"),
-                                     col("PRODUCT_NAME").alias("TOP_SELLING_PRODUCT")
+                                        col("SUPPLIER_ID"),
+                                        col("PRODUCT_NAME").alias("TOP_SELLING_PRODUCT")
                                  )
-        
         log.info("Data Frame : 'Top_Selling_Product_df' is built")
 
         # Processing Node : 'Shortcut_To_Supplier_Performance_Tgt' - Filtered dataset for target table
-        Shortcut_To_Supplier_Performance_Tgt =  (SQ_Shortcut_To_Suppliers.select("SUPPLIER_ID", "SUPPLIER_NAME")
-                                                .join(AGG_TRANS_Product, "SUPPLIER_ID", "left")
-                                                .join(Top_Selling_Product_df, "SUPPLIER_ID", "left")
-                                                .withColumn("DAY_DT", current_date())
+        Shortcut_To_Supplier_Performance_Tgt =  SQ_Shortcut_To_Suppliers\
                                                 .select(
-                                                    col("DAY_DT"),
-                                                    col("SUPPLIER_ID"),
-                                                    col("SUPPLIER_NAME"),
-                                                    col("agg_total_revenue").alias("TOTAL_REVENUE"),
-                                                    col("TOTAL_PRODUCTS_SOLD"),
-                                                    col("agg_total_quantity").alias("TOTAL_STOCK_SOLD"),
-                                                    when(col("TOP_SELLING_PRODUCT").isNull(), lit("No sales"))
-                                                    .otherwise(col("TOP_SELLING_PRODUCT"))
-                                                    .alias("TOP_SELLING_PRODUCT"))
+                                                        col("SUPPLIER_ID"), 
+                                                        col("SUPPLIER_NAME")
+                                                )\
+                                                .join(AGG_TRANS_Product, "SUPPLIER_ID", "left")\
+                                                .join(Top_Selling_Product_df, "SUPPLIER_ID", "left")\
+                                                .withColumn("DAY_DT", current_date())\
+                                                .select(
+                                                        col("DAY_DT"),
+                                                        col("SUPPLIER_ID"),
+                                                        col("SUPPLIER_NAME"),
+                                                        col("agg_total_revenue").alias("TOTAL_REVENUE"),
+                                                        col("TOTAL_PRODUCTS_SOLD"),
+                                                        col("agg_total_quantity").alias("TOTAL_STOCK_SOLD"),
+                                                        when(col("TOP_SELLING_PRODUCT").isNull(), lit("No sales"))
+                                                        .otherwise(col("TOP_SELLING_PRODUCT"))
+                                                        .alias("TOP_SELLING_PRODUCT")
                                                 )\
                                                 .fillna({
-                                                  "TOTAL_REVENUE": 0,
-                                                  "TOTAL_PRODUCTS_SOLD": 0,
-                                                  "TOTAL_STOCK_SOLD": 0
+                                                      "TOTAL_REVENUE": 0,
+                                                      "TOTAL_PRODUCTS_SOLD": 0,
+                                                      "TOTAL_STOCK_SOLD": 0
                                                 })\
-
+                                                
         log.info("Data Frame : 'Shortcut_To_Supplier_Performance_Tgt' is built")
 
         # Check for duplicates before load
