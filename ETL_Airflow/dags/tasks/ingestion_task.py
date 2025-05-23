@@ -1,7 +1,7 @@
 from pyspark.sql.functions import count,col
 from airflow.decorators import task
 from airflow.exceptions import AirflowException
-from utils import create_session, load_to_postgres, Extractor, log,Duplicate_check,end_session,read_from_postgres
+from utils import create_session, load_to_postgres, Extractor, log, Duplicate_check, end_session, read_from_postgres
 from secret_key import  POSTGRES_PASSWORD
 from dotenv import load_dotenv
 load_dotenv()
