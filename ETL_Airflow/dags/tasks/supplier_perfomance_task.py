@@ -80,7 +80,7 @@ def m_load_suppliers_perfomance():
   
         # Processing Node : AGG_TRANS_Product_Level - Aggregates data at the product level per supplier       
         AGG_TRANS_Product =  JNR_Products_Suppliers\
-                                .groupBy("SUPPLIER_ID")\
+                                .groupBy("SUPPLIER_ID","SUPPLIER_NAME")\
                                 .agg(
                                     sum("REVENUE").alias("agg_total_revenue"),
                                     sum("QUANTITY").alias("agg_total_quantity"),
@@ -103,6 +103,45 @@ def m_load_suppliers_perfomance():
         log.info("Data Frame : 'Top_Selling_Product_df' is built")
 
         # Processing Node : 'Shortcut_To_Supplier_Performance_Tgt' - Filtered dataset for target table
+        Supplier_With_Agg = SQ_Shortcut_To_Suppliers\
+                                .select(
+                                    col("SUPPLIER_ID"), 
+                                    col("SUPPLIER_NAME")
+                                )\
+                                .join(
+                                    AGG_TRANS_Product, 
+                                    on="SUPPLIER_ID", 
+                                    how="left"
+                                )
+
+        Supplier_Performance = Supplier_With_Agg\
+                                    .join(
+                                        Top_Selling_Product_df, 
+                                        on="SUPPLIER_ID", 
+                                        how="left"
+                                    )
+
+        Shortcut_To_Supplier_Performance_Tgt = Supplier_Performance\
+                                                    .withColumn("DAY_DT", current_date())\
+                                                    .select(
+                                                        col("DAY_DT"),
+                                                        col("SUPPLIER_ID"),
+                                                        col("SUPPLIER_NAME"),
+                                                        col("agg_total_revenue").alias("TOTAL_REVENUE"),
+                                                        col("TOTAL_PRODUCTS_SOLD"),
+                                                        col("agg_total_quantity").alias("TOTAL_STOCK_SOLD"),
+                                                        when(col("TOP_SELLING_PRODUCT").isNull(), lit("No sales"))
+                                                        .otherwise(col("TOP_SELLING_PRODUCT"))
+                                                        .alias("TOP_SELLING_PRODUCT")
+                                                    )\
+                                                    .fillna({
+                                                        "TOTAL_REVENUE": 0,
+                                                        "TOTAL_PRODUCTS_SOLD": 0,
+                                                        "TOTAL_STOCK_SOLD": 0
+                                                    })
+
+        log.info("Data Frame : 'Shortcut_To_Supplier_Performance_Tgt' is built")
+
         Shortcut_To_Supplier_Performance_Tgt =  SQ_Shortcut_To_Suppliers\
                                                     .select(
                                                         col("SUPPLIER_ID"), 
