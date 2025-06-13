@@ -38,13 +38,28 @@ def m_ingest_data_into_suppliers():
                                 col("CONTACT_DETAILS"),
                                 col("REGION")
                             )
+        
+        suppliers_legacy_df = suppliers_df_tgt\
+                               .withColumn("DAY_DT", current_date())
+
+        suppliers_legacy_df_tgt = suppliers_legacy_df\
+                                    .select(
+                                        col("DAY_DT"),
+                                        col("SUPPLIER_ID"),
+                                        col("SUPPLIER_NAME"),
+                                        col("CONTACT_DETAILS"),
+                                        col("REGION")
+                                    )
     
         # Check for duplicate SUPPLIER_IDs
         checker=Duplicate_check()
         checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
 
         # Load the cleaned data into the raw.suppliers table
-        load_to_postgres(suppliers_df_tgt, "raw.suppliers", "overwrite")
+        load_to_postgres(suppliers_df_tgt, "raw.suppliers_pre", "overwrite")
+
+        load_to_postgres(suppliers_legacy_df_tgt, "legacy.suppliers", "append")
+        
         return "Task for loading Suppliers got completed successfully."
      
     except Exception as e:
@@ -92,12 +107,31 @@ def m_ingest_data_into_products():
                                     col("SUPPLIER_ID")
                                 )
         
+        products_legacy_df = products_df_tgt\
+                               .withColumn("DAY_DT", current_date())
+
+        
+        products_legacy_df_tgt=products_legacy_df\
+                                .select(
+                                    col("DAY_DT"),
+                                    col("PRODUCT_ID"),
+                                    col("PRODUCT_NAME"),
+                                    col("CATEGORY"),
+                                    col("SELLING_PRICE"),
+                                    col("COST_PRICE"),
+                                    col("STOCK_QUANTITY"),
+                                    col("REORDER_LEVEL"),
+                                    col("SUPPLIER_ID")
+                                )
+        
         # Check for duplicate PRODUCT_IDs
         checker=Duplicate_check()
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
        
          # Load the cleaned data into the raw.products table
-        load_to_postgres(products_df_tgt, "raw.products", "overwrite")
+        load_to_postgres(products_df_tgt, "raw.products_pre","overwrite")
+
+        load_to_postgres(products_legacy_df_tgt, "legacy.products", "append")
 
         return "Task for loading products got completed successfully."
 
@@ -133,13 +167,29 @@ def m_ingest_data_into_customers():
                                 col("EMAIL"),
                                 col("PHONE_NUMBER")
                             )
+        customers_legacy_df = customers_df_tgt\
+                               .withColumn("DAY_DT", current_date())
         
+                    
+        customers_legacy_df_tgt=customers_legacy_df\
+                            .select(
+                                col("DAY_DT"),
+                                col("CUSTOMER_ID"),
+                                col("NAME"),
+                                col("CITY"),
+                                col("EMAIL"),
+                                col("PHONE_NUMBER")
+                            )
+
         # Check for duplicate CUSTOMER_IDs
         checker=Duplicate_check()
-        checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
+        checker.has_duplicates(customers_legacy_df_tgt, ["CUSTOMER_ID"])
 
          # Load the cleaned data into the raw.customers table
-        load_to_postgres(customers_df_tgt, "raw.customers", "overwrite")
+        load_to_postgres(customers_df_tgt, "raw.customers_pre", "overwrite")
+
+        load_to_postgres(customers_legacy_df_tgt, "legacy.customers", "append")
+
         return "Task for loading customers got completed successfully."
 
     except Exception as e:
@@ -192,14 +242,31 @@ def m_ingest_data_into_sales():
                             col("ORDER_STATUS"),
                             col("PAYMENT_MODE")
                         )
-    
+        sales_legacy_df = sales_df_tgt\
+                               .withColumn("DAY_DT", current_date())
          
+        sales_legacy_df_tgt=sales_legacy_df \
+                        .select(
+                            col("DAY_DT"),
+                            col("SALE_ID"),
+                            col("CUSTOMER_ID"),
+                            col("PRODUCT_ID"),
+                            col("SALE_DATE"),
+                            col("QUANTITY"),
+                            col("DISCOUNT"),
+                            col("SHIPPING_COST"),
+                            col("ORDER_STATUS"),
+                            col("PAYMENT_MODE")
+                        )
         # Check for duplicates based on SALE_ID column
         checker=Duplicate_check()
-        checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
+        checker.has_duplicates(sales_legacy_df_tgt, ["SALE_ID"])
 
         #writing data to PostgreSQL
-        load_to_postgres(sales_df_tgt, "raw.sales", "overwrite")
+        load_to_postgres(sales_df_tgt, "raw.sales_pre", "overwrite")
+
+        load_to_postgres(sales_legacy_df_tgt, "legacy.sales", "append")
+        
         return "Task for loading Sales got completed successfully."
    
     except Exception as e:
