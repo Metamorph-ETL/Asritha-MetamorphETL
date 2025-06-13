@@ -97,5 +97,3 @@ def get_suppliers():
     blob = get_latest_file_from_gcs("supplier")
     df = read_csv_from_gcs(blob)
     return {"status": 200, "data": df.to_dict(orient="records")}
-
-

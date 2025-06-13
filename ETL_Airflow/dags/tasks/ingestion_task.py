@@ -17,7 +17,6 @@ def m_ingest_data_into_suppliers():
 
         # Extract supplier data from API
         extractor = Extractor("/v1/suppliers")
-
         data = extractor.extract_data()
         
         # Convert extracted JSON data to Spark DataFrame
@@ -30,7 +29,7 @@ def m_ingest_data_into_suppliers():
                             .withColumnRenamed("contact_details", "CONTACT_DETAILS") \
                             .withColumnRenamed("region", "REGION")
             
-            
+        # Selecting required columns from the source DataFrame `suppliers_df`    
         suppliers_df_tgt=suppliers_df \
                             .select(
                                 col("SUPPLIER_ID"),
@@ -38,10 +37,12 @@ def m_ingest_data_into_suppliers():
                                 col("CONTACT_DETAILS"),
                                 col("REGION")
                             )
-        
+
+        # Adding a column "DAY_DT" with the current date to track daily snapshots
         suppliers_legacy_df = suppliers_df_tgt\
                                .withColumn("DAY_DT", current_date())
 
+        # Rearranging and selecting final columns for writing to the legacy table
         suppliers_legacy_df_tgt = suppliers_legacy_df\
                                     .select(
                                         col("DAY_DT"),
@@ -58,6 +59,7 @@ def m_ingest_data_into_suppliers():
         # Load the cleaned data into the raw.suppliers table
         load_to_postgres(suppliers_df_tgt, "raw.suppliers_pre", "overwrite")
 
+        # Load the cleaned data into the legacy.suppliers table
         load_to_postgres(suppliers_legacy_df_tgt, "legacy.suppliers", "append")
         
         return "Task for loading Suppliers got completed successfully."
@@ -77,13 +79,12 @@ def m_ingest_data_into_products():
         
         # Extract products data from API
         extractor = Extractor("/v1/products")
-  
         data = extractor.extract_data()
         
         # Convert extracted JSON data to Spark DataFrame
         products_df = spark.createDataFrame(data)
 
-         # Rename columns
+        # Rename columns
         products_df=products_df \
                         .withColumnRenamed("product_id", "PRODUCT_ID") \
                         .withColumnRenamed("product_name", "PRODUCT_NAME") \
@@ -94,7 +95,7 @@ def m_ingest_data_into_products():
                         .withColumnRenamed("reorder_level", "REORDER_LEVEL") \
                         .withColumnRenamed("supplier_id", "SUPPLIER_ID")
             
-
+        # Selecting required columns from the source DataFrame `products_df`
         products_df_tgt=products_df \
                                 .select(
                                     col("PRODUCT_ID"),
@@ -107,10 +108,11 @@ def m_ingest_data_into_products():
                                     col("SUPPLIER_ID")
                                 )
         
+        # Adding a column "DAY_DT" with the current date to track daily snapshots
         products_legacy_df = products_df_tgt\
                                .withColumn("DAY_DT", current_date())
 
-        
+        # Rearranging and selecting final columns for writing to the legacy table
         products_legacy_df_tgt=products_legacy_df\
                                 .select(
                                     col("DAY_DT"),
@@ -128,9 +130,11 @@ def m_ingest_data_into_products():
         checker=Duplicate_check()
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
        
-         # Load the cleaned data into the raw.products table
+        # Load the cleaned data into the raw.products table
         load_to_postgres(products_df_tgt, "raw.products_pre","overwrite")
 
+        
+        # Load the cleaned data into the legacy.products table
         load_to_postgres(products_legacy_df_tgt, "legacy.products", "append")
 
         return "Task for loading products got completed successfully."
@@ -148,17 +152,23 @@ def m_ingest_data_into_products():
 def m_ingest_data_into_customers():
     try:
         spark = create_session()
+
+        # Extract customers data from API
         extractor = Extractor("/v1/customers")
         data = extractor.extract_data()
+
+        # Convert extracted JSON data to Spark DataFrame
         customers_df = spark.createDataFrame(data)
 
+        # Convert extracted JSON data to Spark DataFrame
         customers_df=customers_df \
                         .withColumnRenamed("customer_id", "CUSTOMER_ID") \
                         .withColumnRenamed("name", "NAME") \
                         .withColumnRenamed("city", "CITY") \
                         .withColumnRenamed("email", "EMAIL") \
                         .withColumnRenamed("phone_number", "PHONE_NUMBER") 
-            
+
+        # Selecting required columns from the source DataFrame `customers_df`  
         customers_df_tgt=customers_df \
                             .select(
                                 col("CUSTOMER_ID"),
@@ -167,10 +177,12 @@ def m_ingest_data_into_customers():
                                 col("EMAIL"),
                                 col("PHONE_NUMBER")
                             )
+
+        # Adding a column "DAY_DT" with the current date to track daily snapshots                   
         customers_legacy_df = customers_df_tgt\
                                .withColumn("DAY_DT", current_date())
         
-                    
+        # Rearranging and selecting final columns for writing to the legacy table          
         customers_legacy_df_tgt=customers_legacy_df\
                             .select(
                                 col("DAY_DT"),
@@ -188,6 +200,7 @@ def m_ingest_data_into_customers():
          # Load the cleaned data into the raw.customers table
         load_to_postgres(customers_df_tgt, "raw.customers_pre", "overwrite")
 
+        # Load the cleaned data into the legacy.customers table
         load_to_postgres(customers_legacy_df_tgt, "legacy.customers", "append")
 
         return "Task for loading customers got completed successfully."
@@ -205,6 +218,7 @@ def m_ingest_data_into_customers():
 def m_ingest_data_into_sales():
     try:
         spark=create_session()
+
         # Define the GCS bucket name
         GCS_BUCKET_NAME = "meta-morph"
         today_str= "20250322"
@@ -229,7 +243,7 @@ def m_ingest_data_into_sales():
                     .withColumnRenamed("order_status", "ORDER_STATUS") \
                     .withColumnRenamed("payment_mode", "PAYMENT_MODE") 
             
-            
+        # Selecting required columns from the source DataFrame `sales_df`    
         sales_df_tgt=sales_df \
                         .select(
                             col("SALE_ID"),
@@ -242,9 +256,12 @@ def m_ingest_data_into_sales():
                             col("ORDER_STATUS"),
                             col("PAYMENT_MODE")
                         )
+
+        # Adding a column "DAY_DT" with the current date to track daily snapshots
         sales_legacy_df = sales_df_tgt\
                                .withColumn("DAY_DT", current_date())
          
+        # Rearranging and selecting final columns for writing to the legacy table
         sales_legacy_df_tgt=sales_legacy_df \
                         .select(
                             col("DAY_DT"),
@@ -258,13 +275,15 @@ def m_ingest_data_into_sales():
                             col("ORDER_STATUS"),
                             col("PAYMENT_MODE")
                         )
+
         # Check for duplicates based on SALE_ID column
         checker=Duplicate_check()
         checker.has_duplicates(sales_legacy_df_tgt, ["SALE_ID"])
 
-        #writing data to PostgreSQL
+        # Load the cleaned data into the raw.sales table
         load_to_postgres(sales_df_tgt, "raw.sales_pre", "overwrite")
 
+        # Load the cleaned data into the legacy.sales table
         load_to_postgres(sales_legacy_df_tgt, "legacy.sales", "append")
         
         return "Task for loading Sales got completed successfully."

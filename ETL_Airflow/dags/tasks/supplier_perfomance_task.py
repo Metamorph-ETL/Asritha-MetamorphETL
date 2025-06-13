@@ -134,7 +134,7 @@ def m_load_suppliers_perfomance():
                                                         "TOTAL_REVENUE": 0,
                                                         "TOTAL_PRODUCTS_SOLD": 0,
                                                         "TOTAL_STOCK_SOLD": 0
-                                                     })\                                     
+                                                     })                               
         log.info("Data Frame : 'Shortcut_To_Supplier_Performance_Tgt' is built")
 
         # Check for duplicates before load
