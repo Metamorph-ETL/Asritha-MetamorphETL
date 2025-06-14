@@ -15,6 +15,7 @@ from tasks.supplier_perfomance_task import m_load_suppliers_perfomance
     catchup=False, 
     tags=["ETL"]
 )
+
 def etl_process():
     supplier_task = m_ingest_data_into_suppliers()
     product_task = m_ingest_data_into_products()
