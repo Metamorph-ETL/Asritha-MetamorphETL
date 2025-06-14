@@ -23,6 +23,7 @@ def etl_process():
     sale_task = m_ingest_data_into_sales()
     supplier_perfomance = m_load_suppliers_perfomance()
     
+    
     [supplier_task, product_task, customer_task, sale_task] >> supplier_perfomance
 
 dag_instance = etl_process()

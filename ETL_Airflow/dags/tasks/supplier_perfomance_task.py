@@ -86,20 +86,20 @@ def m_load_suppliers_perfomance():
                                        "PRODUCT_NAME"
                                    ) \
                                    .agg(
-                                       sum("REVENUE").alias("PRODUCT_REVENUE"),
-                                       sum("QUANTITY").alias("TOTAL_QUANTITY")
+                                       sum("REVENUE").alias("agg_REVENUE"),
+                                       sum("QUANTITY").alias("agg_QUANTITY")
                                    ) 
         log.info("Data Frame : 'AGG_Supplier_Product' is built")
 
-        #Processing Node : ORD_Top_Selling_Product - Get top product per supplier by revenue
-        ORD_Top_Selling_Product = Window.partitionBy("SUPPLIER_ID") \
+        #Processing Node : window_spec - Get top product per supplier by revenue
+        window_spec = Window.partitionBy("SUPPLIER_ID") \
                                     .orderBy(
-                                        col("PRODUCT_REVENUE").desc()
+                                        col("agg_REVENUE").desc()
                                     )
 
         #Processing Node : FIL_Top_Products - Get top product with ranking
         FIL_Top_Products = AGG_Supplier_Product \
-                                .withColumn("rank", row_number().over(ORD_Top_Selling_Product)
+                                .withColumn("rank", row_number().over(window_spec)
                                 ) \
                                 .filter(
                                     col("rank") == 1
@@ -117,8 +117,8 @@ def m_load_suppliers_perfomance():
                                      "SUPPLIER_NAME"
                                  ) \
                                  .agg(
-                                     sum("PRODUCT_REVENUE").alias("TOTAL_REVENUE"),
-                                     sum("TOTAL_QUANTITY").alias("TOTAL_STOCK_SOLD"),
+                                     sum("agg_REVENUE").alias("TOTAL_REVENUE"),
+                                     sum("agg_QUANTITY").alias("TOTAL_STOCK_SOLD"),
                                      countDistinct("PRODUCT_ID").alias("TOTAL_PRODUCTS_SOLD")
                                  )
         log.info("Data Frame : 'AGG_Supplier_Level' is built")
