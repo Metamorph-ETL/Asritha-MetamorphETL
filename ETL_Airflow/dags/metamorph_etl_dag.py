@@ -17,12 +17,12 @@ from tasks.supplier_perfomance_task import m_load_suppliers_perfomance
 )
 
 def etl_process():
-    """supplier_task = m_ingest_data_into_suppliers()
+    supplier_task = m_ingest_data_into_suppliers()
     product_task = m_ingest_data_into_products()
     customer_task = m_ingest_data_into_customers()
-    sale_task = m_ingest_data_into_sales()"""
+    sale_task = m_ingest_data_into_sales()
     supplier_perfomance = m_load_suppliers_perfomance()
     
-    #[supplier_task, product_task, customer_task, sale_task] >> supplier_perfomance
+    [supplier_task, product_task, customer_task, sale_task] >> supplier_perfomance
 
 dag_instance = etl_process()
