@@ -31,12 +31,12 @@ def m_ingest_data_into_suppliers():
             
         # Selecting required columns from the source DataFrame `suppliers_df`    
         suppliers_df_tgt = suppliers_df \
-                            .select(
-                                col("SUPPLIER_ID"),
-                                col("SUPPLIER_NAME"),
-                                col("CONTACT_DETAILS"),
-                                col("REGION")
-                            )
+                                .select(
+                                    col("SUPPLIER_ID"),
+                                    col("SUPPLIER_NAME"),
+                                    col("CONTACT_DETAILS"),
+                                    col("REGION")
+                                )
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots
         suppliers_legacy_df = suppliers_df_tgt \
@@ -114,18 +114,18 @@ def m_ingest_data_into_products():
 
         # Rearranging and selecting final columns for writing to the legacy table
         products_legacy_df_tgt = products_legacy_df \
-                                .select(
-                                    col("DAY_DT"),
-                                    col("PRODUCT_ID"),
-                                    col("PRODUCT_NAME"),
-                                    col("CATEGORY"),
-                                    col("SELLING_PRICE"),
-                                    col("COST_PRICE"),
-                                    col("STOCK_QUANTITY"),
-                                    col("REORDER_LEVEL"),
-                                    col("SUPPLIER_ID")
-                                )
-        
+                                    .select(
+                                        col("DAY_DT"),
+                                        col("PRODUCT_ID"),
+                                        col("PRODUCT_NAME"),
+                                        col("CATEGORY"),
+                                        col("SELLING_PRICE"),
+                                        col("COST_PRICE"),
+                                        col("STOCK_QUANTITY"),
+                                        col("REORDER_LEVEL"),
+                                        col("SUPPLIER_ID")
+                                    )
+            
         # Check for duplicate PRODUCT_IDs
         checker = Duplicate_check()
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
@@ -161,21 +161,21 @@ def m_ingest_data_into_customers():
 
         # Convert extracted JSON data to Spark DataFrame
         customers_df = customers_df \
-                        .withColumnRenamed("customer_id", "CUSTOMER_ID") \
-                        .withColumnRenamed("name", "NAME") \
-                        .withColumnRenamed("city", "CITY") \
-                        .withColumnRenamed("email", "EMAIL") \
-                        .withColumnRenamed("phone_number", "PHONE_NUMBER") 
+                            .withColumnRenamed("customer_id", "CUSTOMER_ID") \
+                            .withColumnRenamed("name", "NAME") \
+                            .withColumnRenamed("city", "CITY") \
+                            .withColumnRenamed("email", "EMAIL") \
+                            .withColumnRenamed("phone_number", "PHONE_NUMBER") 
 
         # Selecting required columns from the source DataFrame `customers_df`  
         customers_df_tgt = customers_df \
-                            .select(
-                                col("CUSTOMER_ID"),
-                                col("NAME"),
-                                col("CITY"),
-                                col("EMAIL"),
-                                col("PHONE_NUMBER")
-                            )
+                                .select(
+                                    col("CUSTOMER_ID"),
+                                    col("NAME"),
+                                    col("CITY"),
+                                    col("EMAIL"),
+                                    col("PHONE_NUMBER")
+                                )
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots                   
         customers_legacy_df = customers_df_tgt \
@@ -232,29 +232,29 @@ def m_ingest_data_into_sales():
         
         # Rename columns to match schema standards (uppercase), and select the required columns
         sales_df = sales_df \
-                    .withColumnRenamed("sale_id", "SALE_ID") \
-                    .withColumnRenamed("customer_id", "CUSTOMER_ID") \
-                    .withColumnRenamed("product_id", "PRODUCT_ID") \
-                    .withColumnRenamed("sale_date", "SALE_DATE") \
-                    .withColumnRenamed("quantity", "QUANTITY") \
-                    .withColumnRenamed("discount", "DISCOUNT") \
-                    .withColumnRenamed("shipping_cost", "SHIPPING_COST") \
-                    .withColumnRenamed("order_status", "ORDER_STATUS") \
-                    .withColumnRenamed("payment_mode", "PAYMENT_MODE") 
-            
+                        .withColumnRenamed("sale_id", "SALE_ID") \
+                        .withColumnRenamed("customer_id", "CUSTOMER_ID") \
+                        .withColumnRenamed("product_id", "PRODUCT_ID") \
+                        .withColumnRenamed("sale_date", "SALE_DATE") \
+                        .withColumnRenamed("quantity", "QUANTITY") \
+                        .withColumnRenamed("discount", "DISCOUNT") \
+                        .withColumnRenamed("shipping_cost", "SHIPPING_COST") \
+                        .withColumnRenamed("order_status", "ORDER_STATUS") \
+                        .withColumnRenamed("payment_mode", "PAYMENT_MODE") 
+                
         # Selecting required columns from the source DataFrame `sales_df`    
         sales_df_tgt = sales_df \
-                        .select(
-                            col("SALE_ID"),
-                            col("CUSTOMER_ID"),
-                            col("PRODUCT_ID"),
-                            col("SALE_DATE"),
-                            col("QUANTITY"),
-                            col("DISCOUNT"),
-                            col("SHIPPING_COST"),
-                            col("ORDER_STATUS"),
-                            col("PAYMENT_MODE")
-                        )
+                            .select(
+                                col("SALE_ID"),
+                                col("CUSTOMER_ID"),
+                                col("PRODUCT_ID"),
+                                col("SALE_DATE"),
+                                col("QUANTITY"),
+                                col("DISCOUNT"),
+                                col("SHIPPING_COST"),
+                                col("ORDER_STATUS"),
+                                col("PAYMENT_MODE")
+                            )
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots
         sales_legacy_df = sales_df_tgt \
@@ -262,18 +262,18 @@ def m_ingest_data_into_sales():
          
         # Rearranging and selecting final columns for writing to the legacy table
         sales_legacy_df_tgt = sales_legacy_df \
-                                .select(
-                                    col("DAY_DT"),
-                                    col("SALE_ID"),
-                                    col("CUSTOMER_ID"),
-                                    col("PRODUCT_ID"),
-                                    col("SALE_DATE"),
-                                    col("QUANTITY"),
-                                    col("DISCOUNT"),
-                                    col("SHIPPING_COST"),
-                                    col("ORDER_STATUS"),
-                                    col("PAYMENT_MODE")
-                                )
+                                 .select(
+                                     col("DAY_DT"),
+                                     col("SALE_ID"),
+                                     col("CUSTOMER_ID"),
+                                     col("PRODUCT_ID"),
+                                     col("SALE_DATE"),
+                                     col("QUANTITY"),
+                                     col("DISCOUNT"),
+                                     col("SHIPPING_COST"),
+                                     col("ORDER_STATUS"),
+                                     col("PAYMENT_MODE")
+                                 )
 
         # Check for duplicates based on SALE_ID column
         checker = Duplicate_check()
