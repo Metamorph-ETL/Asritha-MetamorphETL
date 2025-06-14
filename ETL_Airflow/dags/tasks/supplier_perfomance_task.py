@@ -117,9 +117,15 @@ def m_load_suppliers_perfomance():
                                      "SUPPLIER_NAME"
                                  ) \
                                  .agg(
-                                     sum("agg_REVENUE").alias("TOTAL_REVENUE"),
-                                     sum("agg_QUANTITY").alias("TOTAL_STOCK_SOLD"),
-                                     countDistinct("PRODUCT_ID").alias("TOTAL_PRODUCTS_SOLD")
+                                     sum("agg_REVENUE").alias("agg_TOTAL_REVENUE"),
+                                     sum("agg_QUANTITY").alias("agg_TOTAL_STOCK_SOLD"),
+                                     countDistinct("PRODUCT_ID").alias("agg_TOTAL_PRODUCTS_SOLD")
+                                 ).select(
+                                      col("SUPPLIER_ID"),
+                                      col("SUPPLIER_NAME"),
+                                      col("agg_TOTAL_REVENUE").alias("TOTAL_REVENUE"),
+                                      col("agg_TOTAL_STOCK_SOLD").alias("TOTAL_STOCK_SOLD"),
+                                      col("agg_TOTAL_PRODUCTS_SOLD").alias("TOTAL_PRODUCTS_SOLD")
                                  )
         log.info("Data Frame : 'AGG_Supplier_Level' is built")
 
