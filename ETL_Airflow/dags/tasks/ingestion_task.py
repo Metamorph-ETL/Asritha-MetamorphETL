@@ -39,11 +39,11 @@ def m_ingest_data_into_suppliers():
                             )
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots
-        suppliers_legacy_df = suppliers_df_tgt\
+        suppliers_legacy_df = suppliers_df_tgt \
                                .withColumn("DAY_DT", current_date())
 
         # Rearranging and selecting final columns for writing to the legacy table
-        suppliers_legacy_df_tgt = suppliers_legacy_df\
+        suppliers_legacy_df_tgt = suppliers_legacy_df \
                                     .select(
                                         col("DAY_DT"),
                                         col("SUPPLIER_ID"),
@@ -109,11 +109,11 @@ def m_ingest_data_into_products():
                                 )
         
         # Adding a column "DAY_DT" with the current date to track daily snapshots
-        products_legacy_df = products_df_tgt\
+        products_legacy_df = products_df_tgt \
                                .withColumn("DAY_DT", current_date())
 
         # Rearranging and selecting final columns for writing to the legacy table
-        products_legacy_df_tgt = products_legacy_df\
+        products_legacy_df_tgt = products_legacy_df \
                                 .select(
                                     col("DAY_DT"),
                                     col("PRODUCT_ID"),
@@ -133,7 +133,6 @@ def m_ingest_data_into_products():
         # Load the cleaned data into the raw.products table
         load_to_postgres(products_df_tgt, "raw.products_pre", "overwrite")
 
-        
         # Load the cleaned data into the legacy.products table
         load_to_postgres(products_legacy_df_tgt, "legacy.products", "append")
 
@@ -179,11 +178,11 @@ def m_ingest_data_into_customers():
                             )
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots                   
-        customers_legacy_df = customers_df_tgt\
+        customers_legacy_df = customers_df_tgt \
                                .withColumn("DAY_DT", current_date())
         
         # Rearranging and selecting final columns for writing to the legacy table          
-        customers_legacy_df_tgt = customers_legacy_df\
+        customers_legacy_df_tgt = customers_legacy_df \
                                     .select(
                                         col("DAY_DT"),
                                         col("CUSTOMER_ID"),
@@ -258,7 +257,7 @@ def m_ingest_data_into_sales():
                         )
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots
-        sales_legacy_df = sales_df_tgt\
+        sales_legacy_df = sales_df_tgt \
                                .withColumn("DAY_DT", current_date())
          
         # Rearranging and selecting final columns for writing to the legacy table

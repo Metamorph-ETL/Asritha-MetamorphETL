@@ -93,10 +93,11 @@ def m_load_suppliers_perfomance():
 
         #Processing Node : Top_Selling_Product_df - Get top product per supplier by revenue
         Top_Selling_Product_df = Window.partitionBy("SUPPLIER_ID") \
-                        .orderBy(
-                            col("PRODUCT_REVENUE").desc()
-                        )
+                                    .orderBy(
+                                        col("PRODUCT_REVENUE").desc()
+                                    )
 
+        #Processing Node : Top_Product - Get top product with ranking
         TOP_Products = AGG_Supplier_Product \
                            .withColumn("rank", row_number().over(Top_Selling_Product_df)
                            ) \
