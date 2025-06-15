@@ -6,8 +6,8 @@ from tasks.ingestion_task import (
     m_ingest_data_into_customers,
     m_ingest_data_into_sales
 )
-from tasks.supplier_perfomance_task import m_load_suppliers_perfomance
-from tasks.product_perfomane_task import  m_load_products_perfomance
+from tasks.m_supplier_perfomance_task import m_load_suppliers_perfomance
+from tasks.m_product_performance_task import  m_load_products_perfomance
 
 @dag(
     dag_id="metamorph_etl_pipeline",
