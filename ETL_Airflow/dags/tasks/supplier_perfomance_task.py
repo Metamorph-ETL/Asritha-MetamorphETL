@@ -1,6 +1,6 @@
 from airflow.decorators import task
 from utils import create_session, load_to_postgres, Duplicate_check, end_session, log, read_from_postgres
-from pyspark.sql.functions import sum as sum, col, countDistinct, rank, current_date, when, lit, row_number, desc
+from pyspark.sql.functions import sum, col, countDistinct, rank, current_date, when, lit, row_number, desc
 from pyspark.sql.window import Window
 from airflow.exceptions import AirflowException
 
@@ -104,35 +104,28 @@ def m_load_suppliers_perfomance():
                                 .filter(
                                     col("rank") == 1
                                 ) \
-                                .select(
-                                    "SUPPLIER_ID", 
-                                    col("PRODUCT_NAME").alias("TOP_SELLING_PRODUCT")
-                                )
+                                .withColumnRenamed("PRODUCT_NAME", "TOP_SELLING_PRODUCT")
+
         log.info("Data Frame : 'FIL_Top_Products ' is built")
 
         #Processing Node : AGG_Supplier_Level - Aggregates at supplier level
         AGG_Supplier_Level = AGG_Supplier_Product \
                                  .groupBy(
-                                     "SUPPLIER_ID", 
+                                     "SUPPLIER_ID",
                                      "SUPPLIER_NAME"
                                  ) \
                                  .agg(
                                      sum("agg_REVENUE").alias("agg_TOTAL_REVENUE"),
                                      sum("agg_QUANTITY").alias("agg_TOTAL_STOCK_SOLD"),
                                      countDistinct("PRODUCT_ID").alias("agg_TOTAL_PRODUCTS_SOLD")
-                                 ).select(
-                                      col("SUPPLIER_ID"),
-                                      col("SUPPLIER_NAME"),
-                                      col("agg_TOTAL_REVENUE").alias("TOTAL_REVENUE"),
-                                      col("agg_TOTAL_STOCK_SOLD").alias("TOTAL_STOCK_SOLD"),
-                                      col("agg_TOTAL_PRODUCTS_SOLD").alias("TOTAL_PRODUCTS_SOLD")
-                                 )
+                                 ) \
+                             
         log.info("Data Frame : 'AGG_Supplier_Level' is built")
 
-        #Processing Node : Shortcut_To_Supplier_Performance_Tgt - Final target dataset
-        Shortcut_To_Supplier_Performance_Tgt = AGG_Supplier_Level \
+        #Processing Node : Shortcut_To_Supplier_Performance - Final target dataset
+        JNR_Supplier_Agg_Perfomance = AGG_Supplier_Level \
                                                    .join(
-                                                       FIL_Top_Products, 
+                                                       FIL_Top_Products.drop("SUPPLIER_NAME"), 
                                                        on="SUPPLIER_ID", 
                                                        how="left"
                                                    ) \
@@ -147,13 +140,25 @@ def m_load_suppliers_perfomance():
                                                    ) \
                                                    .withColumn("DAY_DT", current_date()) \
                                                    .fillna({
-                                                        "TOTAL_REVENUE": 0,
-                                                        "TOTAL_PRODUCTS_SOLD": 0,
-                                                        "TOTAL_STOCK_SOLD": 0
+                                                        "agg_TOTAL_REVENUE": 0,
+                                                        "agg_TOTAL_PRODUCTS_SOLD": 0,
+                                                        "agg_TOTAL_STOCK_SOLD": 0
                                                    }) \
-                                                   .orderBy(desc("TOTAL_REVENUE")
-                                                   ) \
+                                                   .orderBy(desc("agg_TOTAL_REVENUE")) \
                                                    .select(
+                                                        col("SUPPLIER_ID"),
+                                                        col("SUPPLIER_NAME"),
+                                                        col("TOP_SELLING_PRODUCT"),
+                                                        col("agg_TOTAL_REVENUE").alias("TOTAL_REVENUE"),
+                                                        col("agg_TOTAL_STOCK_SOLD").alias("TOTAL_STOCK_SOLD"),
+                                                        col("agg_TOTAL_PRODUCTS_SOLD").alias("TOTAL_PRODUCTS_SOLD"),
+                                                        col("DAY_DT")        
+                                                   )
+
+                                                                                                 
+       #Processing Node : Shortcut_To_Supplier_Performance_Tgt - Final target dataset
+        Shortcut_To_Supplier_Performance_Tgt = JNR_Supplier_Agg_Perfomance \
+                                                    .select( 
                                                         col("DAY_DT"),                                                     
                                                         col("SUPPLIER_ID"),
                                                         col("SUPPLIER_NAME"),
