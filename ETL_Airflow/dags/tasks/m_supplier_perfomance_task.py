@@ -153,8 +153,7 @@ def m_load_suppliers_perfomance():
                                                         col("agg_TOTAL_PRODUCTS_SOLD").alias("TOTAL_PRODUCTS_SOLD"),
                                                         col("DAY_DT")        
                                                    )
-
-                                                                                                 
+                                                                                          
        #Processing Node : Shortcut_To_Supplier_Performance_Tgt - Final target dataset
         Shortcut_To_Supplier_Performance_Tgt = JNR_Supplier_Agg_Perfomance \
                                                     .select( 
