@@ -194,7 +194,7 @@ def m_ingest_data_into_customers():
 
         # Check for duplicate CUSTOMER_IDs
         checker = Duplicate_check()
-        checker.has_duplicates(customers_legacy_df_tgt, ["CUSTOMER_ID"])
+        checker.has_duplicate(customers_df_tgt ["CUSTOMER_ID"])
 
          # Load the cleaned data into the raw.customers table
         load_to_postgres(customers_df_tgt, "raw.customers_pre", "overwrite")
@@ -277,7 +277,7 @@ def m_ingest_data_into_sales():
 
         # Check for duplicates based on SALE_ID column
         checker = Duplicate_check()
-        checker.has_duplicates(sales_legacy_df_tgt, ["SALE_ID"])
+        checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
         # Load the cleaned data into the raw.sales table
         load_to_postgres(sales_df_tgt, "raw.sales_pre", "overwrite")

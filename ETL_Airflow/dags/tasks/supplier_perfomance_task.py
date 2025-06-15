@@ -91,11 +91,10 @@ def m_load_suppliers_perfomance():
                                    ) 
         log.info("Data Frame : 'AGG_Supplier_Product' is built")
 
-        #Processing Node : window_spec - Get top product per supplier by revenue
         window_spec = Window.partitionBy("SUPPLIER_ID") \
                                     .orderBy(
                                         col("agg_REVENUE").desc()
-                                    )
+                                    )    
 
         #Processing Node : FIL_Top_Products - Get top product with ranking
         FIL_Top_Products = AGG_Supplier_Product \
