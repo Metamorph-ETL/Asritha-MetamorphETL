@@ -4,8 +4,8 @@ from pyspark.sql.functions import col,current_date,sum,avg,when
 from pyspark.sql.window import Window
 from airflow.exceptions import AirflowException
 
-@task(task_id="m_load_products_perfomance")
-def m_load_products_perfomance():
+@task(task_id="m_load_products_performance")
+def m_load_products_performance():
     try:
         spark = create_session()
         
@@ -66,7 +66,7 @@ def m_load_products_perfomance():
         log.info("Data Frame : 'AGG_Product_Performance' is built")
         
         # Processing Node : JNR_Product_Agg_Perfomance- Aggregates data at the product level 
-        JNR_Product_Agg_Perfomance = AGG_Product_Performance.alias("AGG") \
+        JNR_Product_Agg_Performance = AGG_Product_Performance.alias("AGG") \
                                             .join(
                                                 SQ_Shortcut_To_Products,
                                                 on="PRODUCT_ID",
@@ -94,7 +94,7 @@ def m_load_products_perfomance():
         log.info("Data Frame : 'JNR_Product_Agg_Perfomance' is built")
 
         # Processing Node : Shortcut_To_Product_Performance_Tgt - Final target dataframe
-        Shortcut_To_Product_Performance_Tgt = JNR_Product_Agg_Perfomance \
+        Shortcut_To_Product_Performance_Tgt = JNR_Product_Agg_Performance \
                                                     .select(
                                                             col("DAY_DT"),
                                                             col("PRODUCT_ID"),
