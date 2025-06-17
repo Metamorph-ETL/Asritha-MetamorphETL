@@ -6,7 +6,8 @@ from tasks.ingestion_task import (
     m_ingest_data_into_customers,
     m_ingest_data_into_sales
 )
-from tasks.supplier_perfomance_task import m_load_suppliers_perfomance
+from tasks.m_supplier_performance_task import m_load_suppliers_performance
+from tasks.m_product_performance_task import  m_load_products_performance
 
 @dag(
     dag_id="metamorph_etl_pipeline",
@@ -21,9 +22,9 @@ def etl_process():
     product_task = m_ingest_data_into_products()
     customer_task = m_ingest_data_into_customers()
     sale_task = m_ingest_data_into_sales()
-    supplier_perfomance = m_load_suppliers_perfomance()
+    supplier_performance = m_load_suppliers_performance()
+    product_performance = m_load_products_performance()
     
-    
-    [supplier_task, product_task, customer_task, sale_task] >> supplier_perfomance
+    [supplier_task, product_task, customer_task, sale_task] >> supplier_performance >> product_performance
 
 dag_instance = etl_process()

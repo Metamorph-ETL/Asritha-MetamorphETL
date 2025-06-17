@@ -9,7 +9,7 @@ from pyspark.sql.functions import sum, col, countDistinct, rank, current_date
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number
 
-#create a task that ingests data into raw.suppliers table
+# Create a task that ingests data into raw.suppliers table
 @task(task_id="m_ingest_data_into_suppliers")
 def m_ingest_data_into_suppliers():
     try:
@@ -71,7 +71,7 @@ def m_ingest_data_into_suppliers():
     finally:
         end_session(spark)
 
-#create a task that ingests data into raw.products table
+# Create a task that ingests data into raw.products table
 @task(task_id="m_ingest_data_into_products")
 def m_ingest_data_into_products():
     try:
@@ -142,11 +142,10 @@ def m_ingest_data_into_products():
         log.error(f"Products ETL failed: {str(e)}", exc_info=True)
         raise AirflowException("Products ETL failed")
     
-
     finally:
         end_session(spark)
 
-#create a task that ingests data into raw.customers table
+# Create a task that ingests data into raw.customers table
 @task(task_id="m_ingest_data_into_customers")
 def m_ingest_data_into_customers():
     try:
@@ -194,7 +193,7 @@ def m_ingest_data_into_customers():
 
         # Check for duplicate CUSTOMER_IDs
         checker = Duplicate_check()
-        checker.has_duplicate(customers_df_tgt ["CUSTOMER_ID"])
+        checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
 
          # Load the cleaned data into the raw.customers table
         load_to_postgres(customers_df_tgt, "raw.customers_pre", "overwrite")
@@ -208,11 +207,10 @@ def m_ingest_data_into_customers():
         log.error(f"Customers ETL failed: {str(e)}", exc_info=True)
         raise AirflowException("Customers ETL failed")
     
-
     finally:
         end_session(spark)
 
-#create a task that ingests data into raw.sales table
+# Create a task that ingests data into raw.sales table
 @task(task_id="m_ingest_data_into_sales")
 def m_ingest_data_into_sales():
     try:
@@ -222,7 +220,7 @@ def m_ingest_data_into_sales():
         GCS_BUCKET_NAME = "meta-morph"
         today_str = "20250322"
 
-        #GCS path to the sales CSV file for today's date
+        # GCS path to the sales CSV file for today's date
         gcs_path = f"gs://{GCS_BUCKET_NAME}/{today_str}/sales_{today_str}.csv"
         log.info(f"Reading CSV file from GCS: {gcs_path}")
         
