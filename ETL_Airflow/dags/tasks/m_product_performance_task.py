@@ -47,8 +47,7 @@ def m_load_products_performance():
                                         SQ_Shortcut_To_Products.STOCK_QUANTITY
                                     ) \
                                     .withColumn("SALES_AMOUNT", col("QUANTITY") * col("SELLING_PRICE")) \
-                                    .withColumn("PROFIT_AMOUNT", col("QUANTITY") * (col("SELLING_PRICE") - col("COST_PRICE"))) \
-                                    .fillna({"QUANTITY": 0})
+                                    .withColumn("PROFIT_AMOUNT", col("QUANTITY") * (col("SELLING_PRICE") - col("COST_PRICE"))) 
         log.info("Data Frame : 'JNR_Sales_Products' is built")
 
         # Processing Node :  AGG_Product_Performance - Aggregate sales metrics by product
@@ -90,7 +89,7 @@ def m_load_products_performance():
         log.info("Data Frame : 'JNR_Product_Agg_Performance' is built")
         
 
-        # Processing Node : JNR_Product_Agg_Performance_cleaned - Final target dataframe
+        # Processing Node : Shortcut_To_Product_Performance_Tgt - Final target dataframe
         Shortcut_To_Product_Performance_Tgt = JNR_Product_Agg_Performance  \
                                                     .select(
                                                             col("DAY_DT"),
