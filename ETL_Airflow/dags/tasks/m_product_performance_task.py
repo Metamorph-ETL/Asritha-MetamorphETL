@@ -89,9 +89,8 @@ def m_load_products_performance():
                                             .withColumn("DAY_DT", current_date()) 
         log.info("Data Frame : 'JNR_Product_Agg_Performance' is built")
         
-
         # Processing Node : Shortcut_To_Product_Performance_Tgt - Final target dataframe
-        Shortcut_To_Product_Performance_Tgt = JNR_Product_Agg_Performance  \
+        Shortcut_To_Product_Performance_Tgt = JNR_Product_Agg_Performance \
                                                     .select(
                                                             col("DAY_DT"),
                                                             col("PRODUCT_ID"),
