@@ -122,9 +122,9 @@ def m_load_suppliers_performance():
         log.info("Data Frame : 'AGG_Supplier_Level' is built")
 
         #Processing Node : Shortcut_To_Supplier_Performance - Final target dataset
-        JNR_Supplier_Agg_Performance = AGG_Supplier_Level.alias("AGG") \
+        JNR_Supplier_Agg_Performance = AGG_Supplier_Level \
                                                    .join(
-                                                       FIL_Top_Products.alias("PRO"), 
+                                                       FIL_Top_Products.drop("SUPPLIER_NAME"), 
                                                        on="SUPPLIER_ID", 
                                                        how="left"
                                                    ) \
@@ -145,15 +145,16 @@ def m_load_suppliers_performance():
                                                    }) \
                                                    .orderBy(desc("agg_TOTAL_REVENUE")) \
                                                    .select(
-                                                        col("AGG.SUPPLIER_ID"),
-                                                        col("AGG.SUPPLIER_NAME"),
-                                                        col("PRO.TOP_SELLING_PRODUCT"),
-                                                        col("AGG.agg_TOTAL_REVENUE").alias("TOTAL_REVENUE"),
-                                                        col("AGG.agg_TOTAL_STOCK_SOLD").alias("TOTAL_STOCK_SOLD"),
-                                                        col("AGG.agg_TOTAL_PRODUCTS_SOLD").alias("TOTAL_PRODUCTS_SOLD"),
+                                                        col("SUPPLIER_ID"),
+                                                        col("SUPPLIER_NAME"),
+                                                        col("TOP_SELLING_PRODUCT"),
+                                                        col("agg_TOTAL_REVENUE").alias("TOTAL_REVENUE"),
+                                                        col("agg_TOTAL_STOCK_SOLD").alias("TOTAL_STOCK_SOLD"),
+                                                        col("agg_TOTAL_PRODUCTS_SOLD").alias("TOTAL_PRODUCTS_SOLD"),
                                                         col("DAY_DT")        
                                                    )
-                                                                                          
+
+                                                                                                 
        #Processing Node : Shortcut_To_Supplier_Performance_Tgt - Final target dataset
         Shortcut_To_Supplier_Performance_Tgt = JNR_Supplier_Agg_Performance \
                                                     .select( 

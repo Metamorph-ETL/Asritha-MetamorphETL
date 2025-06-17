@@ -47,7 +47,8 @@ def m_load_products_performance():
                                         SQ_Shortcut_To_Products.STOCK_QUANTITY
                                     ) \
                                     .withColumn("SALES_AMOUNT", col("QUANTITY") * col("SELLING_PRICE")) \
-                                    .withColumn("PROFIT_AMOUNT", col("QUANTITY") * (col("SELLING_PRICE") - col("COST_PRICE")))
+                                    .withColumn("PROFIT_AMOUNT", col("QUANTITY") * (col("SELLING_PRICE") - col("COST_PRICE"))) \
+                                    .fillna({"QUANTITY": 0})
         log.info("Data Frame : 'JNR_Sales_Products' is built")
 
         # Processing Node :  AGG_Product_Performance - Aggregate sales metrics by product
@@ -68,11 +69,6 @@ def m_load_products_performance():
         # Processing Node : JNR_Product_Agg_Perfomance- Aggregates data at the product level 
         JNR_Product_Agg_Performance = AGG_Product_Performance.alias("AGG") \
                                             .join(
-                                                SQ_Shortcut_To_Products,
-                                                on="PRODUCT_ID",
-                                                how="inner"
-                                            ) \
-                                            .join(
                                                 SQ_Shortcut_To_Products.alias("PROD"),
                                                 on="PRODUCT_ID",
                                                 how="inner"
@@ -81,31 +77,32 @@ def m_load_products_performance():
                                                     col("AGG.PRODUCT_ID"),
                                                     col("AGG.PRODUCT_NAME"),
                                                     col("AGG.CATEGORY"),
-                                                    col("AGG.agg_TOTAL_SALES_AMOUNT"),
-                                                    col("AGG.agg_QUANTITY"),
-                                                    col("AGG.agg_SELLING_PRICE"),
-                                                    col("AGG.agg_PROFIT_AMOUNT"),
+                                                    col("AGG.agg_TOTAL_SALES_AMOUNT").alias("TOTAL_SALES_AMOUNT"),
+                                                    col("AGG.agg_QUANTITY").alias("TOTAL_QUANTITY_SOLD"),
+                                                    col("AGG.agg_SELLING_PRICE").alias("AVG_SALE_PRICE"),
+                                                    col("AGG.agg_PROFIT_AMOUNT").alias("PROFIT"),
                                                     col("PROD.STOCK_QUANTITY"),
                                                     col("PROD.REORDER_LEVEL")
                                             ) \
                                             .withColumn("STOCK_LEVEL_STATUS",when(col("STOCK_QUANTITY") <= col("REORDER_LEVEL"), "Below Reorder Level")
                                             .otherwise("Sufficient Stock")) \
                                             .withColumn("DAY_DT", current_date()) 
-        log.info("Data Frame : 'JNR_Product_Agg_Perfomance' is built")
+        log.info("Data Frame : 'JNR_Product_Agg_Performance' is built")
+        
 
-        # Processing Node : Shortcut_To_Product_Performance_Tgt - Final target dataframe
-        Shortcut_To_Product_Performance_Tgt = JNR_Product_Agg_Performance \
+        # Processing Node : JNR_Product_Agg_Performance_cleaned - Final target dataframe
+        Shortcut_To_Product_Performance_Tgt = JNR_Product_Agg_Performance  \
                                                     .select(
                                                             col("DAY_DT"),
                                                             col("PRODUCT_ID"),
                                                             col("PRODUCT_NAME"),
-                                                            col("agg_TOTAL_SALES_AMOUNT").alias("TOTAL_SALES_AMOUNT"),
-                                                            col("agg_QUANTITY").alias("TOTAL_QUANTITY_SOLD"),
-                                                            col("agg_SELLING_PRICE").alias("AVG_SALE_PRICE"),
+                                                            col("TOTAL_SALES_AMOUNT"),
+                                                            col("TOTAL_QUANTITY_SOLD"),
+                                                            col("AVG_SALE_PRICE"),
                                                             col("STOCK_QUANTITY"),
                                                             col("REORDER_LEVEL"),
                                                             col("STOCK_LEVEL_STATUS"),
-                                                            col("agg_PROFIT_AMOUNT").alias("PROFIT"),
+                                                            col("PROFIT"),
                                                             col("CATEGORY")
                                                     )                                                                           
         log.info("Final Data Frame : 'Shortcut_To_Product_Performance_Tgt' is built")

@@ -27,4 +27,4 @@ def etl_process():
     
     [supplier_task, product_task, customer_task, sale_task] >> supplier_performance >> product_performance
 
-    dag_instance = etl_process()
+dag_instance = etl_process()
