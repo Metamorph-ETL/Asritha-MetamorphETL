@@ -91,6 +91,7 @@ def m_load_suppliers_performance():
                                    ) 
         log.info("Data Frame : 'AGG_Supplier_Product' is built")
 
+        # Define a window specification and  orders by REVENUE in descending order.
         window_spec = Window.partitionBy("SUPPLIER_ID") \
                                     .orderBy(
                                         col("agg_REVENUE").desc()
@@ -121,7 +122,7 @@ def m_load_suppliers_performance():
                              
         log.info("Data Frame : 'AGG_Supplier_Level' is built")
 
-        #Processing Node : Shortcut_To_Supplier_Performance - Final target dataset
+        #Processing Node : JNR_Supplier_Agg_Performance - Final target dataframe
         JNR_Supplier_Agg_Performance = AGG_Supplier_Level \
                                                    .join(
                                                        FIL_Top_Products.drop("SUPPLIER_NAME"), 
@@ -155,7 +156,7 @@ def m_load_suppliers_performance():
                                                    )
 
                                                                                                  
-       #Processing Node : Shortcut_To_Supplier_Performance_Tgt - Final target dataset
+       #Processing Node : Shortcut_To_Supplier_Performance_Tgt - Final target dataframe
         Shortcut_To_Supplier_Performance_Tgt = JNR_Supplier_Agg_Performance \
                                                     .select( 
                                                         col("DAY_DT"),                                                     

@@ -65,7 +65,7 @@ def m_load_products_performance():
                                         ) 
         log.info("Data Frame : 'AGG_Product_Performance' is built")
         
-        # Processing Node : JNR_Product_Agg_Perfomance- Aggregates data at the product level and join tables AGG_Product_Performance,SQ_Shortcut_To_Products
+        # Processing Node : JNR_Product_Agg_Perfomance- Aggregates data at the product level and join dataframes AGG_Product_Performance,SQ_Shortcut_To_Products
         JNR_Product_Agg_Performance = AGG_Product_Performance.alias("AGG") \
                                             .join(
                                                 SQ_Shortcut_To_Products.alias("PROD"),
