@@ -65,7 +65,7 @@ def m_load_products_performance():
                                         ) 
         log.info("Data Frame : 'AGG_Product_Performance' is built")
         
-        # Processing Node : JNR_Product_Agg_Perfomance- Aggregates data at the product level 
+        # Processing Node : JNR_Product_Agg_Perfomance- Aggregates data at the product level and join tables AGG_Product_Performance,SQ_Shortcut_To_Products
         JNR_Product_Agg_Performance = AGG_Product_Performance.alias("AGG") \
                                             .join(
                                                 SQ_Shortcut_To_Products.alias("PROD"),
@@ -83,7 +83,8 @@ def m_load_products_performance():
                                                     col("PROD.STOCK_QUANTITY"),
                                                     col("PROD.REORDER_LEVEL")
                                             ) \
-                                            .withColumn("STOCK_LEVEL_STATUS",when(col("STOCK_QUANTITY") <= col("REORDER_LEVEL"), "Below Reorder Level")
+                                            .withColumn("STOCK_LEVEL_STATUS",
+                                            when(col("STOCK_QUANTITY") <= col("REORDER_LEVEL"), "Below Reorder Level")
                                             .otherwise("Sufficient Stock")) \
                                             .withColumn("DAY_DT", current_date()) 
         log.info("Data Frame : 'JNR_Product_Agg_Performance' is built")
