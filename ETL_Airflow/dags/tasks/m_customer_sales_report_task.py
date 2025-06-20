@@ -32,7 +32,7 @@ def m_load_customer_sales_report():
                                         )
         log.info("Data Frame : 'SQ_Shortcut_To_Products' is built")
 
-        # Processing Node : SQ_Shortcut_To_Products - Reads data from 'raw.customers' table
+        # Processing Node : SQ_Shortcut_To_Customers - Reads data from 'raw.customers' table
         SQ_Shortcut_To_Customers = read_from_postgres(spark, "raw.customers") \
                                         .select(
                                             col("CUSTOMER_ID"),
@@ -70,7 +70,7 @@ def m_load_customer_sales_report():
         log.info("Data Frame : 'JNR_Sales_Products' is built") 
 
         # Processing Node : JNR_All_Entities - Joins data from JNR_Sales_Products and SQ_Shortcut_To_Customers dataframes
-        JNR_All_Entities = JNR_Sales_Products \
+        JNR_All_Data = JNR_Sales_Products \
                                     .join(
                                          SQ_Shortcut_To_Customers,
                                          on="CUSTOMER_ID",
@@ -92,7 +92,7 @@ def m_load_customer_sales_report():
         log.info("Data Frame : 'JNR_All_Entities' is built") 
 
         # Processing Node : EXP_Calculate_Metrics - Perform core metric calculations such as SALE_DATE, SALE_AMOUNT and add audit columns
-        EXP_Calculate_Metrics = JNR_All_Entities \
+        EXP_Calculate_Metrics = JNR_All_Data \
                                     .withColumn("DAY_DT", current_date()) \
                                     .withColumn("SALE_DATE", date_sub(current_date(), 1)) \
                                     .withColumn("SALE_MONTH", month(col("SALE_DATE"))) \
