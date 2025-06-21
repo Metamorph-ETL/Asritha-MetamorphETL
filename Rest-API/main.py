@@ -27,7 +27,7 @@ class Token(BaseModel):
     token_type: str
 
 # GCS Configuration
-GCS_BUCKET_NAME = "meta-morph"
+GCS_BUCKET_NAME = "meta-morph-flow"
 GCS_CREDENTIALS_PATH = env["GCS_CREDENTIALS_PATH"]
 
 def get_gcs_client():

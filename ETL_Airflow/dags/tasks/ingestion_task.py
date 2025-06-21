@@ -217,7 +217,7 @@ def m_ingest_data_into_sales():
         spark=create_session()
 
         # Define the GCS bucket name
-        GCS_BUCKET_NAME = "meta-morph"
+        GCS_BUCKET_NAME = "meta-morph-flow"
         today_str = "20250322"
 
         # GCS path to the sales CSV file for today's date
