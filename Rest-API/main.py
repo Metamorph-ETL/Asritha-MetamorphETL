@@ -27,7 +27,7 @@ class Token(BaseModel):
     token_type: str
 
 # GCS Configuration
-GCS_BUCKET_NAME = "meta-morph"
+GCS_BUCKET_NAME = "meta-morph-flow"
 GCS_CREDENTIALS_PATH = env["GCS_CREDENTIALS_PATH"]
 
 def get_gcs_client():
@@ -81,7 +81,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 @app.get("/v1/products")
 def get_products():
-    blob = get_latest_file_from_gcs("product_new")
+    blob = get_latest_file_from_gcs("product")
     df = read_csv_from_gcs(blob)
     return {"status": 200, "data": df.to_dict(orient="records")}
 
