@@ -11,6 +11,8 @@ RUN apt update && \
 RUN mkdir -p /usr/local/airflow/jars/ && \
     wget https://storage.googleapis.com/hadoop-lib/gcs/gcs-connector-hadoop3-latest.jar -P /usr/local/airflow/jars/
 
+# Install it
+RUN pip install /usr/local/airflow/jars/raptor-1.2.9-py3-none-any.whl
 
 # Set JAVA_HOME
 ENV JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64"
