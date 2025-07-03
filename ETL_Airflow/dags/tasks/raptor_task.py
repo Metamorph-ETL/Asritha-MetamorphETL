@@ -4,7 +4,7 @@ from airflow.decorators import task
 from dags.secret_key import POSTGRES_USER,POSTGRES_PASSWORD 
 
 @task()
-def trigger_raptor():
+def raptor_call():
     spark = create_session()
     raptor = Raptor(spark, POSTGRES_USER, POSTGRES_PASSWORD)
     raptor.submit_raptor_request(
@@ -15,7 +15,7 @@ def trigger_raptor():
                                  source_sql = "select * from raw.suppliers",
                                  target_sql = "select * from raw.supplier_test",
                                  email = "asritha.vig2338@gmail.com",
-                                 output_table_name = "suppliers vs upplier_test",
+                                 output_table_name = "suppliers vs supplier_test",
                                  primary_key = "SUPPLIER_ID"
                                 )
     return "Success"
