@@ -1,7 +1,6 @@
 from airflow.decorators import dag
 from datetime import datetime
 from tasks.raptor_task import raptor_call
-from tasks.raptor_setup import trigger_raptor
 
 @dag(
     dag_id="raptor_testing",
@@ -12,7 +11,6 @@ from tasks.raptor_setup import trigger_raptor
 )
 
 def testing():
-     trigger_raptor()
      raptor_call()
 
 raptor = testing()
