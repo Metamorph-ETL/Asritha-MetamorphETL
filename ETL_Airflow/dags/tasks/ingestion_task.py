@@ -8,6 +8,7 @@ load_dotenv()
 from pyspark.sql.functions import sum, col, countDistinct, rank, current_date
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number
+from datetime import datetime
 
 # Create a task that ingests data into raw.suppliers table
 @task(task_id="m_ingest_data_into_suppliers")
@@ -218,7 +219,7 @@ def m_ingest_data_into_sales():
 
         # Define the GCS bucket name
         GCS_BUCKET_NAME = "meta-morph-flow"
-        today_str = "20250322"
+        today_str = datetime.today().strftime("%Y%m%d")
 
         # GCS path to the sales CSV file for today's date
         gcs_path = f"gs://{GCS_BUCKET_NAME}/{today_str}/sales_{today_str}.csv"
