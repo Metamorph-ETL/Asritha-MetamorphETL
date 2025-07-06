@@ -12,8 +12,8 @@ from tasks.m_customer_sales_report_task import m_load_customer_sales_report
 
 @dag(
     dag_id="metamorph_etl_pipeline",
-    schedule_interval='@daily',
-    start_date=datetime(2025, 5, 6),
+    schedule_interval="30 11 * * *",
+    start_date=datetime(2025, 7, 6),
     catchup=False, 
     tags=["ETL"]
 )
