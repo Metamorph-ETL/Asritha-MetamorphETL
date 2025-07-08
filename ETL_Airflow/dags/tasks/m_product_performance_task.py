@@ -9,8 +9,8 @@ def m_load_products_performance():
     try:
         spark = create_session()
         
-        # Processing Node : SQ_Shortcut_To_Products - Reads data from 'raw.products' table
-        SQ_Shortcut_To_Products = read_from_postgres(spark, "raw.products") \
+        # Processing Node : SQ_Shortcut_To_Products - Reads data from 'raw.products_pre' table
+        SQ_Shortcut_To_Products = read_from_postgres(spark, "raw.products_pre") \
                                         .select(
                                             col("PRODUCT_ID"),
                                             col("PRODUCT_NAME"),
@@ -22,15 +22,15 @@ def m_load_products_performance():
                                         )
         log.info("Data Frame : 'SQ_Shortcut_To_Products' is built")
 
-        # Processing Node : SQ_Shortcut_To_Sales - Reads data from 'raw.sales' table
-        SQ_Shortcut_To_Sales = read_from_postgres(spark, "raw.sales") \
+        # Processing Node : SQ_Shortcut_To_Sales - Reads data from 'raw.sales_pre' table
+        SQ_Shortcut_To_Sales = read_from_postgres(spark, "raw.sales_pre") \
                                     .select(
                                         col("PRODUCT_ID"),
                                         col("QUANTITY"),
                                     )
         log.info("Data Frame : 'SQ_Shortcut_To_Sales' is built")
         
-        # Processing Node : JNR_Sales_Products - Joins data from 'raw.products' and 'raw.sales' tables and calculate metrics
+        # Processing Node : JNR_Sales_Products - Joins data from 'raw.products_pre' and 'raw.sales_pre' tables and calculate metrics
         JNR_Sales_Products = SQ_Shortcut_To_Products \
                                     .join(
                                         SQ_Shortcut_To_Sales, 
