@@ -21,12 +21,10 @@ def m_ingest_data_into_suppliers():
         # Extract supplier data from API
         extractor = Extractor("/v1/suppliers")
         data = extractor.extract_data()
-        
-        # Check if data is empty or not received from the API
+
         if not data:
             raise AirflowException("suppliers data is not received ")
         
-        # Convert the list of dictionaries into a list of Spark Row objects
         rows = []
         for record in data:
                 row = Row(**record)
@@ -34,7 +32,7 @@ def m_ingest_data_into_suppliers():
 
         
         # Convert extracted JSON data to Spark DataFrame
-        suppliers_df = spark.createDataFrame(rows)
+        suppliers_df = spark.createDataFrame(data)
 
         # Rename columns
         suppliers_df = suppliers_df \
@@ -94,19 +92,17 @@ def m_ingest_data_into_products():
         # Extract products data from API
         extractor = Extractor("/v1/products")
         data = extractor.extract_data()
-        
-        # Check if data is empty or not received from the API
+            
         if not data:
             raise AirflowException("suppliers data is not received ")
         
-        # Convert the list of dictionaries into a list of Spark Row objects
         rows = []
         for record in data:
                 row = Row(**record)
                 rows.append(row)
         
         # Convert extracted JSON data to Spark DataFrame
-        products_df = spark.createDataFrame(rows)
+        products_df = spark.createDataFrame(data)
          
         # Rename columns
         products_df = products_df \
@@ -179,11 +175,9 @@ def m_ingest_data_into_customers():
         extractor = Extractor("/v1/customers")
         data = extractor.extract_data()
 
-        # Check if data is empty or not received from the API
         if not data:
             raise AirflowException("suppliers data is not received ")
-        
-        # Convert the list of dictionaries into a list of Spark Row objects
+
         rows = []
         for record in data:
                 row = Row(**record)
@@ -191,7 +185,7 @@ def m_ingest_data_into_customers():
 
 
         # Convert extracted JSON data to Spark DataFrame
-        customers_df = spark.createDataFrame(rows)
+        customers_df = spark.createDataFrame(data)
 
         # Rename columns
         customers_df = customers_df \
@@ -215,7 +209,7 @@ def m_ingest_data_into_customers():
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots                   
         customers_legacy_df = customers_df_tgt \
-                               .withColumn("DAY_DT", current_date()-3)
+                               .withColumn("DAY_DT", current_date())
         
         # Rearranging and selecting final columns for writing to the legacy table          
         customers_legacy_df_tgt = customers_legacy_df \
@@ -232,7 +226,7 @@ def m_ingest_data_into_customers():
         checker = Duplicate_check()
         checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
 
-        # Load the cleaned data into the raw.customers table
+         # Load the cleaned data into the raw.customers table
         load_to_postgres(customers_df_tgt, "raw.customers_pre", "overwrite")
 
         # Load the cleaned data into the legacy.customers table
@@ -256,6 +250,7 @@ def m_ingest_data_into_sales():
         # Define the GCS bucket name
         GCS_BUCKET_NAME = "meta-morph-flow"
         today_str = datetime.today().strftime("%Y%m%d")
+        today_str = 20250711
 
         # GCS path to the sales CSV file for today's date
         gcs_path = f"gs://{GCS_BUCKET_NAME}/{today_str}/sales_{today_str}.csv"
@@ -293,7 +288,7 @@ def m_ingest_data_into_sales():
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots
         sales_legacy_df = sales_df_tgt \
-                               .withColumn("DAY_DT", current_date()-3)
+                               .withColumn("DAY_DT", current_date())
          
         # Rearranging and selecting final columns for writing to the legacy table
         sales_legacy_df_tgt = sales_legacy_df \

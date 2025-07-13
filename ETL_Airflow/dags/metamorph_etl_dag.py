@@ -1,5 +1,5 @@
 from airflow.decorators import dag
-from datetime import datetime
+from datetime import datetime,timedelta
 from tasks.ingestion_task import (
     m_ingest_data_into_suppliers,
     m_ingest_data_into_products,
@@ -9,12 +9,19 @@ from tasks.ingestion_task import (
 from tasks.m_supplier_performance_task import m_load_suppliers_performance
 from tasks.m_product_performance_task import  m_load_products_performance
 from tasks.m_customer_sales_report_task import m_load_customer_sales_report
+from pendulum import datetime
+
+"""default_args = {
+    "retries": 3,
+    "retry_delay": timedelta(minutes=10),
+}"""
 
 @dag(
     dag_id="metamorph_etl_pipeline",
-    schedule_interval="30 11 * * *",
-    start_date=datetime(2025, 7, 6),
-    catchup=False, 
+    #schedule_interval="30 11 * * *",
+    #start_date = datetime(2025, 7, 6, tz="Asia/Kolkata"),
+    catchup=False,
+    #default_args=default_args, 
     tags=["ETL"]
 )
 
@@ -30,3 +37,5 @@ def etl_process():
     [supplier_task, product_task, customer_task, sale_task] >> supplier_performance >> product_performance >> customer_sales_report
 
 dag_instance = etl_process()
+
+

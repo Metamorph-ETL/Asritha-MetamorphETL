@@ -11,10 +11,9 @@ from pyspark.sql.functions import row_number
 from datetime import datetime
 from pyspark.sql import Row
 
-
-# Create a task that ingests data into raw.suppliers table
-@task(task_id="m_ingest_data_into_suppliers")
-def m_ingest_data_into_suppliers():
+# Create a task that ingests data into dev_legacy.suppliers table
+@task
+def m_adhoc_into_suppliers():
     try:
         spark = create_session()
 
@@ -54,7 +53,7 @@ def m_ingest_data_into_suppliers():
 
         # Adding a column "DAY_DT" with the current date to track daily snapshots
         suppliers_legacy_df = suppliers_df_tgt \
-                               .withColumn("DAY_DT", current_date())
+                               .withColumn("DAY_DT", current_date()-3)
 
         # Rearranging and selecting final columns for writing to the legacy table
         suppliers_legacy_df_tgt = suppliers_legacy_df \
@@ -70,11 +69,8 @@ def m_ingest_data_into_suppliers():
         checker = Duplicate_check()
         checker.has_duplicates(suppliers_df_tgt, ["SUPPLIER_ID"])    
 
-        # Load the cleaned data into the raw.suppliers table
-        load_to_postgres(suppliers_df_tgt, "raw.suppliers_pre", "overwrite")
-
-        # Load the cleaned data into the legacy.suppliers table
-        load_to_postgres(suppliers_legacy_df_tgt, "legacy.suppliers", "append")
+        # Load the cleaned data into the dev_legacy.suppliers table
+        load_to_postgres(suppliers_legacy_df_tgt, "dev_legacy.suppliers", "append")
         
         return "Task for loading Suppliers got completed successfully."
      
@@ -85,9 +81,9 @@ def m_ingest_data_into_suppliers():
     finally:
         end_session(spark)
 
-# Create a task that ingests data into raw.products table
-@task(task_id="m_ingest_data_into_products")
-def m_ingest_data_into_products():
+# Create a task that ingests data into dev_legacy.products table
+@task
+def m_adhoc_into_products():
     try:
         spark = create_session()
         
@@ -134,7 +130,7 @@ def m_ingest_data_into_products():
         
         # Adding a column "DAY_DT" with the current date to track daily snapshots
         products_legacy_df = products_df_tgt \
-                               .withColumn("DAY_DT", current_date())
+                               .withColumn("DAY_DT", current_date()-3)
 
         # Rearranging and selecting final columns for writing to the legacy table
         products_legacy_df_tgt = products_legacy_df \
@@ -153,12 +149,9 @@ def m_ingest_data_into_products():
         # Check for duplicate PRODUCT_IDs
         checker = Duplicate_check()
         checker.has_duplicates(products_df_tgt, ["PRODUCT_ID"])
-       
-        # Load the cleaned data into the raw.products table
-        load_to_postgres(products_df_tgt, "raw.products_pre", "overwrite")
 
-        # Load the cleaned data into the legacy.products table
-        load_to_postgres(products_legacy_df_tgt, "legacy.products", "append")
+        # Load the cleaned data into the dev_legacy.products table
+        load_to_postgres(products_legacy_df_tgt, "dev_legacy.products", "append")
 
         return "Task for loading products got completed successfully."
 
@@ -169,9 +162,9 @@ def m_ingest_data_into_products():
     finally:
         end_session(spark)
 
-# Create a task that ingests data into raw.customers table
-@task(task_id="m_ingest_data_into_customers")
-def m_ingest_data_into_customers():
+# Create a task that ingests data into dev_legacy.customers table
+@task
+def m_adhoc_into_customers():
     try:
         spark = create_session()
 
@@ -232,11 +225,8 @@ def m_ingest_data_into_customers():
         checker = Duplicate_check()
         checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
 
-        # Load the cleaned data into the raw.customers table
-        load_to_postgres(customers_df_tgt, "raw.customers_pre", "overwrite")
-
-        # Load the cleaned data into the legacy.customers table
-        load_to_postgres(customers_legacy_df_tgt, "legacy.customers", "append")
+        # Load the cleaned data into the dev_legacy.customers table
+        load_to_postgres(customers_legacy_df_tgt, "dev_legacy.customers", "append")
 
         return "Task for loading customers got completed successfully."
 
@@ -248,14 +238,15 @@ def m_ingest_data_into_customers():
         end_session(spark)
 
 # Create a task that ingests data into raw.sales table
-@task(task_id="m_ingest_data_into_sales")
-def m_ingest_data_into_sales():
+@task
+def m_adhoc_into_sales():
     try:
         spark=create_session()
 
         # Define the GCS bucket name
         GCS_BUCKET_NAME = "meta-morph-flow"
-        today_str = datetime.today().strftime("%Y%m%d")
+        #today_str = datetime.today().strftime("%Y%m%d")
+        today_str = 20250710
 
         # GCS path to the sales CSV file for today's date
         gcs_path = f"gs://{GCS_BUCKET_NAME}/{today_str}/sales_{today_str}.csv"
@@ -314,11 +305,8 @@ def m_ingest_data_into_sales():
         checker = Duplicate_check()
         checker.has_duplicates(sales_df_tgt, ["SALE_ID"])
 
-        # Load the cleaned data into the raw.sales table
-        load_to_postgres(sales_df_tgt, "raw.sales_pre", "overwrite")
-
-        # Load the cleaned data into the legacy.sales table
-        load_to_postgres(sales_legacy_df_tgt, "legacy.sales", "append")
+        # Load the cleaned data into the dev_legacy.sales table
+        load_to_postgres(sales_legacy_df_tgt, "dev_legacy.sales", "append")
         
         return "Task for loading Sales got completed successfully."
    
