@@ -22,17 +22,9 @@ def m_ingest_data_into_suppliers():
         extractor = Extractor("/v1/suppliers")
         data = extractor.extract_data()
         
-        # Check if data is empty or not received from the API
-        if not data:
-            raise AirflowException("suppliers data is not received ")
-        
         # Convert the list of dictionaries into a list of Spark Row objects
-        rows = []
-        for record in data:
-                row = Row(**record)
-                rows.append(row)
+        rows = [Row(**record) for record in data]
 
-        
         # Convert extracted JSON data to Spark DataFrame
         suppliers_df = spark.createDataFrame(rows)
 
@@ -95,15 +87,8 @@ def m_ingest_data_into_products():
         extractor = Extractor("/v1/products")
         data = extractor.extract_data()
         
-        # Check if data is empty or not received from the API
-        if not data:
-            raise AirflowException("suppliers data is not received ")
-        
         # Convert the list of dictionaries into a list of Spark Row objects
-        rows = []
-        for record in data:
-                row = Row(**record)
-                rows.append(row)
+        rows = [Row(**record) for record in data]
         
         # Convert extracted JSON data to Spark DataFrame
         products_df = spark.createDataFrame(rows)
@@ -178,17 +163,9 @@ def m_ingest_data_into_customers():
         # Extract customers data from API
         extractor = Extractor("/v1/customers")
         data = extractor.extract_data()
-
-        # Check if data is empty or not received from the API
-        if not data:
-            raise AirflowException("suppliers data is not received ")
         
         # Convert the list of dictionaries into a list of Spark Row objects
-        rows = []
-        for record in data:
-                row = Row(**record)
-                rows.append(row)
-
+        rows = [Row(**record) for record in data]
 
         # Convert extracted JSON data to Spark DataFrame
         customers_df = spark.createDataFrame(rows)

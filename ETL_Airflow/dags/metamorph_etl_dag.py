@@ -9,19 +9,10 @@ from tasks.ingestion_task import (
 from tasks.m_supplier_performance_task import m_load_suppliers_performance
 from tasks.m_product_performance_task import  m_load_products_performance
 from tasks.m_customer_sales_report_task import m_load_customer_sales_report
-from pendulum import datetime
-
-"""default_args = {
-    "retries": 3,
-    "retry_delay": timedelta(minutes=10),
-}"""
 
 @dag(
     dag_id="metamorph_etl_pipeline",
-    #schedule_interval="30 11 * * *",
-    #start_date = datetime(2025, 7, 6, tz="Asia/Kolkata"),
     catchup=False,
-    #default_args=default_args, 
     tags=["ETL"]
 )
 
