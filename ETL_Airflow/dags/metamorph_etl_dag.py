@@ -1,5 +1,5 @@
 from airflow.decorators import dag
-from datetime import datetime
+from datetime import datetime,timedelta
 from tasks.ingestion_task import (
     m_ingest_data_into_suppliers,
     m_ingest_data_into_products,
@@ -12,9 +12,7 @@ from tasks.m_customer_sales_report_task import m_load_customer_sales_report
 
 @dag(
     dag_id="metamorph_etl_pipeline",
-    schedule_interval="30 11 * * *",
-    start_date=datetime(2025, 7, 6),
-    catchup=False, 
+    catchup=False,
     tags=["ETL"]
 )
 
@@ -30,3 +28,5 @@ def etl_process():
     [supplier_task, product_task, customer_task, sale_task] >> supplier_performance >> product_performance >> customer_sales_report
 
 dag_instance = etl_process()
+
+

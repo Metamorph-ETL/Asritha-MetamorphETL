@@ -9,6 +9,8 @@ from pyspark.sql.functions import sum, col, countDistinct, rank, current_date
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number
 from datetime import datetime
+from pyspark.sql import Row
+
 
 # Create a task that ingests data into raw.suppliers table
 @task(task_id="m_ingest_data_into_suppliers")
@@ -20,15 +22,18 @@ def m_ingest_data_into_suppliers():
         extractor = Extractor("/v1/suppliers")
         data = extractor.extract_data()
         
+        # Convert the list of dictionaries into a list of Spark Row objects
+        rows = [Row(**record) for record in data]
+
         # Convert extracted JSON data to Spark DataFrame
-        suppliers_df = spark.createDataFrame(data)
+        suppliers_df = spark.createDataFrame(rows)
 
         # Rename columns
         suppliers_df = suppliers_df \
-                        .withColumnRenamed("Supplier Id", "SUPPLIER_ID") \
-                        .withColumnRenamed("Supplier Name", "SUPPLIER_NAME") \
-                        .withColumnRenamed("Contact Details", "CONTACT_DETAILS") \
-                        .withColumnRenamed("Region", "REGION")
+                            .withColumnRenamed(suppliers_df.columns[0], "SUPPLIER_ID") \
+                            .withColumnRenamed(suppliers_df.columns[1], "SUPPLIER_NAME") \
+                            .withColumnRenamed(suppliers_df.columns[2], "CONTACT_DETAILS") \
+                            .withColumnRenamed(suppliers_df.columns[3], "REGION")
             
         # Selecting required columns from the source DataFrame `suppliers_df`    
         suppliers_df_tgt = suppliers_df \
@@ -82,20 +87,22 @@ def m_ingest_data_into_products():
         extractor = Extractor("/v1/products")
         data = extractor.extract_data()
         
+        # Convert the list of dictionaries into a list of Spark Row objects
+        rows = [Row(**record) for record in data]
+        
         # Convert extracted JSON data to Spark DataFrame
-        products_df = spark.createDataFrame(data)
-
+        products_df = spark.createDataFrame(rows)
+         
         # Rename columns
         products_df = products_df \
-                        .withColumnRenamed("Product Id", "PRODUCT_ID") \
-                        .withColumnRenamed("Product Name", "PRODUCT_NAME") \
-                        .withColumnRenamed("Category", "CATEGORY") \
-                        .withColumnRenamed("Selling Price", "SELLING_PRICE") \
-                        .withColumnRenamed("Cost Price", "COST_PRICE") \
-                        .withColumnRenamed("Stock Quantity", "STOCK_QUANTITY") \
-                        .withColumnRenamed("Reorder Level", "REORDER_LEVEL") \
-                        .withColumnRenamed("Supplier Id", "SUPPLIER_ID")
-
+                            .withColumnRenamed(products_df.columns[0], "PRODUCT_ID") \
+                            .withColumnRenamed(products_df.columns[1], "PRODUCT_NAME") \
+                            .withColumnRenamed(products_df.columns[2], "CATEGORY") \
+                            .withColumnRenamed(products_df.columns[3], "SELLING_PRICE") \
+                            .withColumnRenamed(products_df.columns[4], "COST_PRICE") \
+                            .withColumnRenamed(products_df.columns[5], "STOCK_QUANTITY") \
+                            .withColumnRenamed(products_df.columns[6], "REORDER_LEVEL") \
+                            .withColumnRenamed(products_df.columns[7], "SUPPLIER_ID")
             
         # Selecting required columns from the source DataFrame `products_df`
         products_df_tgt = products_df \
@@ -156,18 +163,22 @@ def m_ingest_data_into_customers():
         # Extract customers data from API
         extractor = Extractor("/v1/customers")
         data = extractor.extract_data()
+        
+        # Convert the list of dictionaries into a list of Spark Row objects
+        rows = [Row(**record) for record in data]
 
         # Convert extracted JSON data to Spark DataFrame
-        customers_df = spark.createDataFrame(data)
+        customers_df = spark.createDataFrame(rows)
 
         # Rename columns
         customers_df = customers_df \
-                            .withColumnRenamed("Customer Id", "CUSTOMER_ID") \
-                            .withColumnRenamed("Name", "NAME") \
-                            .withColumnRenamed("City", "CITY") \
-                            .withColumnRenamed("Email", "EMAIL") \
-                            .withColumnRenamed("Phone Number", "PHONE_NUMBER")
-
+                            .withColumnRenamed(customers_df.columns[0], "CUSTOMER_ID") \
+                            .withColumnRenamed(customers_df.columns[1], "NAME") \
+                            .withColumnRenamed(customers_df.columns[2], "CITY") \
+                            .withColumnRenamed(customers_df.columns[3], "EMAIL") \
+                            .withColumnRenamed(customers_df.columns[4], "PHONE_NUMBER")
+    
+        log.info(f"Final columns in customers_df: {customers_df.columns}")
 
         # Selecting required columns from the source DataFrame `customers_df`  
         customers_df_tgt = customers_df \
@@ -198,7 +209,7 @@ def m_ingest_data_into_customers():
         checker = Duplicate_check()
         checker.has_duplicates(customers_df_tgt, ["CUSTOMER_ID"])
 
-         # Load the cleaned data into the raw.customers table
+        # Load the cleaned data into the raw.customers table
         load_to_postgres(customers_df_tgt, "raw.customers_pre", "overwrite")
 
         # Load the cleaned data into the legacy.customers table
@@ -230,20 +241,19 @@ def m_ingest_data_into_sales():
         # Read the CSV file from GCS into a DataFrame
         sales_df = spark.read.csv(gcs_path, header=True, inferSchema=True)
         log.info(f"CSV loaded successfully. Number of rows: {sales_df.count()}")
-        
+
         # Rename columns
         sales_df = sales_df \
-                        .withColumnRenamed("Sale Id", "SALE_ID") \
-                        .withColumnRenamed("Customer Id", "CUSTOMER_ID") \
-                        .withColumnRenamed("Product Id", "PRODUCT_ID") \
-                        .withColumnRenamed("Sale Date", "SALE_DATE") \
-                        .withColumnRenamed("Quantity", "QUANTITY") \
-                        .withColumnRenamed("Discount", "DISCOUNT") \
-                        .withColumnRenamed("Shipping Cost", "SHIPPING_COST") \
-                        .withColumnRenamed("Order Status", "ORDER_STATUS") \
-                        .withColumnRenamed("Payment Mode", "PAYMENT_MODE")
-
-                
+                        .withColumnRenamed(sales_df.columns[0], "SALE_ID") \
+                        .withColumnRenamed(sales_df.columns[1], "CUSTOMER_ID") \
+                        .withColumnRenamed(sales_df.columns[2], "PRODUCT_ID") \
+                        .withColumnRenamed(sales_df.columns[3], "SALE_DATE") \
+                        .withColumnRenamed(sales_df.columns[4], "QUANTITY") \
+                        .withColumnRenamed(sales_df.columns[5], "DISCOUNT") \
+                        .withColumnRenamed(sales_df.columns[6], "SHIPPING_COST") \
+                        .withColumnRenamed(sales_df.columns[7], "ORDER_STATUS") \
+                        .withColumnRenamed(sales_df.columns[8], "PAYMENT_MODE")
+                                
         # Selecting required columns from the source DataFrame `sales_df`    
         sales_df_tgt = sales_df \
                             .select(
