@@ -25,7 +25,7 @@ def etl_process():
     product_performance = m_load_products_performance()
     customer_sales_report = m_load_customer_sales_report()
     
-    [supplier_task, product_task, customer_task, sale_task] >> supplier_performance >> product_performance >> customer_sales_report
+    [supplier_task, product_task, customer_task] >> sale_task >> supplier_performance >> product_performance >> customer_sales_report
 
 dag_instance = etl_process()
 

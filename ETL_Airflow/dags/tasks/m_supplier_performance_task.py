@@ -1,6 +1,6 @@
 from airflow.decorators import task
 from utils import create_session, load_to_postgres, Duplicate_check, end_session, log, read_from_postgres
-from pyspark.sql.functions import sum, col, countDistinct, rank, current_date, when, lit, row_number, desc
+from pyspark.sql.functions import sum, col, countDistinct, rank, current_date, when, lit, row_number, desc, coalesce
 from pyspark.sql.window import Window
 from airflow.exceptions import AirflowException
 
@@ -14,7 +14,8 @@ def m_load_suppliers_performance():
                                    .select(
                                        col("PRODUCT_ID"),
                                        col("QUANTITY"),
-                                       col("ORDER_STATUS")
+                                       col("ORDER_STATUS"),
+                                       col("DISCOUNT")
                                    )
         log.info("Data Frame : 'SQ_Shortcut_To_Sales' is built")
         
@@ -52,6 +53,7 @@ def m_load_suppliers_performance():
                                  ) \
                                  .select(
                                      FIL_Sales_Cancelled.QUANTITY,
+                                     FIL_Sales_Cancelled.DISCOUNT,
                                      SQ_Shortcut_To_Products.PRODUCT_ID,
                                      SQ_Shortcut_To_Products.SUPPLIER_ID,
                                      SQ_Shortcut_To_Products.PRODUCT_NAME,
@@ -70,11 +72,14 @@ def m_load_suppliers_performance():
                                          JNR_Sales_Products.PRODUCT_ID,
                                          JNR_Sales_Products.PRODUCT_NAME,
                                          JNR_Sales_Products.QUANTITY,
+                                         JNR_Sales_Products.DISCOUNT,
                                          JNR_Sales_Products.SELLING_PRICE,
                                          SQ_Shortcut_To_Suppliers.SUPPLIER_ID,
                                          SQ_Shortcut_To_Suppliers.SUPPLIER_NAME
                                      ) \
-                                     .withColumn("REVENUE", col("QUANTITY") * col("SELLING_PRICE"))                          
+                                     .withColumn("REVENUE", 
+                                         col("QUANTITY") * (col("SELLING_PRICE") - coalesce(col("DISCOUNT"), lit(0)))
+                                     )                         
         log.info("Data Frame : 'JNR_Products_Suppliers' is built")  
   
         # Processing Node : AGG_Supplier_Product - Aggregate revenue and quantity at supplier-product level
